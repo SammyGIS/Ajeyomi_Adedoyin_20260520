@@ -11,8 +11,12 @@ advanced-database-portfolio/
 ├── portfolio-3-transactions-concurrency/
 ├── portfolio-4-nosql/
 ├── portfolio-5-distributed-cloud/
-└── README.md
+└── Ajeyomi_Adedoyin_20260520_README.md
 ```
+
+**Naming Convention Standard:** `Surname_Firstname_StudentID_DocumentType.ext`  
+- **Student Name:** Adedoyin Ajeyomi  
+- **Student ID:** 20260520  
 
 ## Portfolio Modules
 
