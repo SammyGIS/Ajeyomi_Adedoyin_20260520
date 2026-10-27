@@ -55,9 +55,15 @@ Ajeyomi_Adedoyin_20260520/
 ├── portfolio-1-database-design/
 │   ├── Ajeyomi_Adedoyin_20260520_README.md       # Full design report, schema catalog, normalisation
 │   ├── Ajeyomi_Adedoyin_20260520_ERD.png         # Clean black-and-white Entity Relationship Diagram
-│   └── Ajeyomi_Adedoyin_20260520_Schema.sql      # Executable DDL SQL table schemas & constraints
+│   ├── Ajeyomi_Adedoyin_20260520_Schema.sql      # Executable DDL SQL table schemas & constraints
+│   ├── Ajeyomi_Adedoyin_20260520_Seed_Data.sql   # SQL seed records for hubs, vehicles, and trips
+│   └── Ajeyomi_Adedoyin_20260520_Copy_From_CSV.sql # Script to load data directly from CSV files
 │
-├── portfolio-2-query-optimisation/               # Execution plans, indexing, query performance tuning
+├── portfolio-2-query-optimisation/
+│   ├── Ajeyomi_Adedoyin_20260520_README.md       # Query explanations, execution plans, and benchmarks
+│   ├── Ajeyomi_Adedoyin_20260520_Queries.sql     # 4 business queries, EXPLAIN commands, and index scripts
+│   └── Ajeyomi_Adedoyin_20260520_Query_Execution_Plans.txt # Text output of execution plans before and after
+│
 ├── portfolio-3-transactions-concurrency/         # ACID tests, isolation levels, row-level locking
 ├── portfolio-4-nosql/                            # Document store for GPS tracking and cargo telemetry
 ├── portfolio-5-distributed-cloud/                # Sharding, replication, and high-availability architecture
@@ -74,7 +80,7 @@ Ajeyomi_Adedoyin_20260520/
 | Module | Title | Key Topics Covered | Status |
 | :--- | :--- | :--- | :--- |
 | **Portfolio 1** | [Database Design & Modelling](portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_README.md) | 8-table relational schema, clean B&W ERD, KYC integration, constraints, and UNF-to-BCNF normalisation | Completed |
-| **Portfolio 2** | Query Optimisation | Query execution plans (`EXPLAIN ANALYZE`), B-tree indexes, latency reduction | In Progress |
+| **Portfolio 2** | [Query Optimisation](portfolio-2-query-optimisation/Ajeyomi_Adedoyin_20260520_README.md) | Query execution plans (`EXPLAIN ANALYZE`), B-tree & composite indexes, 6.5x–12.8x speedup | Completed |
 | **Portfolio 3** | Transactions & Concurrency | ACID compliance, row locking (`SELECT FOR UPDATE`), preventing double bookings | Scheduled |
 | **Portfolio 4** | NoSQL Databases | Document data modelling, GPS telemetry tracking, JSON storage | Scheduled |
 | **Portfolio 5** | Distributed & Cloud Databases | Regional sharding, database replication, and cloud failover | Scheduled |
