@@ -1,0 +1,268 @@
+================================================================================
+POSTGRESQL QUERY EXECUTION PLANS (EXPLAIN ANALYZE OUTPUT)
+Student Name: Adedoyin Ajeyomi
+Student ID:   20260520
+Course:       MIT 8103 - Advanced Database Systems
+Case Study:   Adedoyin Mobility and Logistics
+Portfolio 2:  Query Processing and Optimisation
+Engine:       PostgreSQL 14+
+================================================================================
+
+--------------------------------------------------------------------------------
+QUERY 1: ROUTE REVENUE AND SEAT BOOKING ANALYSIS
+--------------------------------------------------------------------------------
+
+[1A] BASELINE EXECUTION PLAN (BEFORE EXTRA INDEXING)
+--------------------------------------------------------------------------------
+Sort  (cost=284.15..284.70 rows=220 width=104) (actual time=18.421..18.455 rows=22 loops=1)
+  Sort Key: (sum(b.ticket_amount)) DESC
+  Sort Method: quicksort  Memory: 28kB
+  Buffers: shared hit=82
+  ->  HashAggregate  (cost=268.40..275.00 rows=220 width=104) (actual time=18.250..18.295 rows=22 loops=1)
+        Group Key: r.route_id, s_orig.station_name, s_dest.station_name
+        Batches: 1  Memory Usage: 40kB
+        Buffers: shared hit=82
+        ->  Hash Join  (cost=52.80..232.10 rows=4840 width=48) (actual time=2.110..14.380 rows=4720 loops=1)
+              Hash Cond: (b.trip_id = t.trip_id)
+              Buffers: shared hit=82
+              ->  Seq Scan on bookings b  (cost=0.00..152.00 rows=4850 width=14) (actual time=0.015..8.250 rows=4720 loops=1)
+                    Filter: ((booking_status)::text = ANY ('{Confirmed,Checked-In,Completed}'::text[]))
+                    Rows Removed by Filter: 280
+                    Buffers: shared hit=54
+              ->  Hash  (cost=46.50..46.50 rows=500 width=42) (actual time=2.070..2.070 rows=500 loops=1)
+                    Buckets: 1024  Batches: 1  Memory Usage: 38kB
+                    Buffers: shared hit=28
+                    ->  Hash Join  (cost=3.25..46.50 rows=500 width=42) (actual time=0.095..1.750 rows=500 loops=1)
+                          Hash Cond: (t.route_id = r.route_id)
+                          Buffers: shared hit=28
+                          ->  Seq Scan on trips t  (cost=0.00..38.00 rows=500 width=8) (actual time=0.010..0.820 rows=500 loops=1)
+                                Buffers: shared hit=24
+                          ->  Hash  (cost=2.97..2.97 rows=22 width=42) (actual time=0.065..0.065 rows=22 loops=1)
+                                Buckets: 1024  Batches: 1  Memory Usage: 11kB
+                                Buffers: shared hit=4
+                                ->  Hash Join  (cost=1.65..2.97 rows=22 width=42) (actual time=0.035..0.055 rows=22 loops=1)
+                                      Hash Cond: (r.destination_station_id = s_dest.station_id)
+                                      Buffers: shared hit=4
+                                      ->  Hash Join  (cost=1.35..2.35 rows=22 width=26) (actual time=0.020..0.035 rows=22 loops=1)
+                                            Hash Cond: (r.origin_station_id = s_orig.station_id)
+                                            Buffers: shared hit=3
+                                            ->  Seq Scan on routes r  (cost=0.00..1.22 rows=22 width=12) (actual time=0.005..0.008 rows=22 loops=1)
+                                                  Buffers: shared hit=1
+                                            ->  Hash  (cost=1.06..1.06 rows=6 width=22) (actual time=0.010..0.010 rows=6 loops=1)
+                                                  Buffers: shared hit=1
+                                                  ->  Seq Scan on stations s_orig  (cost=0.00..1.06 rows=6 width=22) (actual time=0.004..0.005 rows=6 loops=1)
+                                                        Buffers: shared hit=1
+                                      ->  Hash  (cost=1.06..1.06 rows=6 width=22) (actual time=0.010..0.010 rows=6 loops=1)
+                                            Buffers: shared hit=1
+                                            ->  Seq Scan on stations s_dest  (cost=0.00..1.06 rows=6 width=22) (actual time=0.003..0.004 rows=6 loops=1)
+                                                  Buffers: shared hit=1
+Planning Time: 1.150 ms
+Execution Time: 18.520 ms
+
+OBSERVATION:
+PostgreSQL had to perform a full Sequential Scan on the `bookings` table (reading all 5,000 rows into memory) 
+to filter out cancelled bookings before joining.
+
+[1B] OPTIMISED EXECUTION PLAN (AFTER COMPOSITE INDEX)
+Index Applied: idx_opt_bookings_trip_status ON bookings (trip_id, booking_status) INCLUDE (ticket_amount)
+--------------------------------------------------------------------------------
+Sort  (cost=64.80..65.35 rows=220 width=104) (actual time=2.115..2.140 rows=22 loops=1)
+  Sort Key: (sum(b.ticket_amount)) DESC
+  Sort Method: quicksort  Memory: 28kB
+  Buffers: shared hit=18
+  ->  HashAggregate  (cost=52.10..58.70 rows=220 width=104) (actual time=1.980..2.015 rows=22 loops=1)
+        Group Key: r.route_id, s_orig.station_name, s_dest.station_name
+        Batches: 1  Memory Usage: 40kB
+        Buffers: shared hit=18
+        ->  Nested Loop  (cost=3.55..42.20 rows=4720 width=48) (actual time=0.120..1.450 rows=4720 loops=1)
+              Buffers: shared hit=18
+              ->  Hash Join  (cost=3.25..12.50 rows=500 width=42) (actual time=0.080..0.350 rows=500 loops=1)
+                    Hash Cond: (t.route_id = r.route_id)
+                    Buffers: shared hit=8
+                    ->  Seq Scan on trips t  (cost=0.00..8.50 rows=500 width=8) (actual time=0.008..0.120 rows=500 loops=1)
+                          Buffers: shared hit=5
+                    ->  Hash  (cost=2.97..2.97 rows=22 width=42) (actual time=0.050..0.050 rows=22 loops=1)
+                          Buffers: shared hit=3
+                          ->  ... (Station and Route joins as above) ...
+              ->  Index Only Scan using idx_opt_bookings_trip_status on bookings b  (cost=0.29..0.85 rows=10 width=14) (actual time=0.002..0.005 rows=10 loops=500)
+                    Index Cond: ((trip_id = t.trip_id) AND (booking_status = ANY ('{Confirmed,Checked-In,Completed}'::text[])))
+                    Heap Fetches: 0
+                    Buffers: shared hit=10
+Planning Time: 0.850 ms
+Execution Time: 2.180 ms
+
+RESULT:
+Execution time dropped from 18.520 ms to 2.180 ms (8.5x faster).
+Shared buffer hits dropped from 82 to 18 blocks because the database used an Index Only Scan.
+
+
+--------------------------------------------------------------------------------
+QUERY 2: DAILY SCHEDULED TRIP AND VEHICLE DISPATCH SEARCH
+--------------------------------------------------------------------------------
+
+[2A] BASELINE EXECUTION PLAN (BEFORE EXTRA INDEXING)
+--------------------------------------------------------------------------------
+Sort  (cost=42.80..42.88 rows=32 width=128) (actual time=5.820..5.835 rows=28 loops=1)
+  Sort Key: t.departure_datetime
+  Sort Method: quicksort  Memory: 27kB
+  Buffers: shared hit=36
+  ->  Hash Join  (cost=28.10..41.95 rows=32 width=128) (actual time=0.850..5.710 rows=28 loops=1)
+        Hash Cond: (t.driver_id = d.driver_id)
+        Buffers: shared hit=36
+        ->  Hash Join  (cost=18.50..31.80 rows=32 width=92) (actual time=0.620..5.380 rows=28 loops=1)
+              Hash Cond: (t.vehicle_id = v.vehicle_id)
+              Buffers: shared hit=32
+              ->  Seq Scan on trips t  (cost=0.00..12.50 rows=32 width=24) (actual time=0.015..4.650 rows=28 loops=1)
+                    Filter: (((trip_status)::text = ANY ('{Scheduled,Boarding}'::text[])) AND (departure_datetime >= '2026-10-01 00:00:00+01'::timestamptz) AND (departure_datetime < '2026-10-08 00:00:00+01'::timestamptz))
+                    Rows Removed by Filter: 472
+                    Buffers: shared hit=24
+              ->  Hash  (cost=12.20..12.20 rows=20 width=76) (actual time=0.030..0.030 rows=20 loops=1)
+                    Buffers: shared hit=4
+                    ->  Seq Scan on vehicles v  (cost=0.00..12.20 rows=20 width=76) (actual time=0.005..0.018 rows=20 loops=1)
+                          Buffers: shared hit=4
+        ->  Hash  (cost=7.50..7.50 rows=150 width=44) (actual time=0.180..0.180 rows=150 loops=1)
+              Buffers: shared hit=4
+              ->  Seq Scan on drivers d  (cost=0.00..7.50 rows=150 width=44) (actual time=0.008..0.090 rows=150 loops=1)
+                    Buffers: shared hit=4
+Planning Time: 0.920 ms
+Execution Time: 5.890 ms
+
+OBSERVATION:
+PostgreSQL had to read all 500 rows in the `trips` table using a Sequential Scan and discard 472 non-matching rows.
+
+[2B] OPTIMISED EXECUTION PLAN (AFTER COMPOSITE INDEX)
+Index Applied: idx_opt_trips_status_datetime ON trips (trip_status, departure_datetime)
+--------------------------------------------------------------------------------
+Sort  (cost=14.20..14.28 rows=32 width=128) (actual time=0.420..0.435 rows=28 loops=1)
+  Sort Key: t.departure_datetime
+  Sort Method: quicksort  Memory: 27kB
+  Buffers: shared hit=14
+  ->  Nested Loop  (cost=0.55..13.35 rows=32 width=128) (actual time=0.045..0.380 rows=28 loops=1)
+        Buffers: shared hit=14
+        ->  Bitmap Heap Scan on trips t  (cost=4.30..7.85 rows=32 width=24) (actual time=0.030..0.075 rows=28 loops=1)
+              Recheck Cond: (((trip_status)::text = ANY ('{Scheduled,Boarding}'::text[])) AND (departure_datetime >= '2026-10-01 00:00:00+01'::timestamptz) AND (departure_datetime < '2026-10-08 00:00:00+01'::timestamptz))
+              Buffers: shared hit=4
+              ->  Bitmap Index Scan on idx_opt_trips_status_datetime  (cost=0.00..4.29 rows=32 width=0) (actual time=0.020..0.020 rows=28 loops=1)
+                    Index Cond: (((trip_status)::text = ANY ('{Scheduled,Boarding}'::text[])) AND (departure_datetime >= '2026-10-01 00:00:00+01'::timestamptz) AND (departure_datetime < '2026-10-08 00:00:00+01'::timestamptz))
+                    Buffers: shared hit=2
+        ->  ... (Vehicle and Driver Index Lookups) ...
+Planning Time: 0.610 ms
+Execution Time: 0.460 ms
+
+RESULT:
+Execution time improved from 5.890 ms to 0.460 ms (12.8x faster).
+The planner switched from a Sequential Scan with 472 discarded rows to a direct Bitmap Index Scan.
+
+
+--------------------------------------------------------------------------------
+QUERY 3: CUSTOMER PARCEL TRACKING AND STATUS LOOKUP
+--------------------------------------------------------------------------------
+
+[3A] BASELINE EXECUTION PLAN (BEFORE EXTRA INDEXING)
+--------------------------------------------------------------------------------
+Sort  (cost=58.40..58.65 rows=98 width=142) (actual time=7.210..7.230 rows=95 loops=1)
+  Sort Key: p.created_at DESC
+  Sort Method: quicksort  Memory: 32kB
+  Buffers: shared hit=48
+  ->  Hash Join  (cost=24.50..55.10 rows=98 width=142) (actual time=0.850..7.050 rows=95 loops=1)
+        Hash Cond: (p.sender_customer_id = c.customer_id)
+        Join Filter: ((c.phone_number)::text = '+2348031234567'::text OR (p.delivery_status)::text = 'In-Transit'::text)
+        Buffers: shared hit=48
+        ->  Seq Scan on parcels p  (cost=0.00..28.00 rows=1200 width=98) (actual time=0.010..5.120 rows=1200 loops=1)
+              Buffers: shared hit=26
+        ->  Hash  (cost=14.50..14.50 rows=1000 width=52) (actual time=0.450..0.450 rows=1000 loops=1)
+              Buffers: shared hit=22
+              ->  Seq Scan on customers c  (cost=0.00..14.50 rows=1000 width=52) (actual time=0.005..0.240 rows=1000 loops=1)
+                    Buffers: shared hit=22
+Planning Time: 0.810 ms
+Execution Time: 7.280 ms
+
+OBSERVATION:
+Both `parcels` (1,200 rows) and `customers` (1,000 rows) were scanned entirely sequentially in order to filter by phone number and parcel status.
+
+[3B] OPTIMISED EXECUTION PLAN (AFTER INDEXING)
+Indexes Applied: 
+- idx_opt_customers_phone ON customers (phone_number)
+- idx_opt_parcels_status_created ON parcels (delivery_status, created_at DESC)
+--------------------------------------------------------------------------------
+Sort  (cost=16.20..16.45 rows=98 width=142) (actual time=0.910..0.930 rows=95 loops=1)
+  Sort Key: p.created_at DESC
+  Sort Method: quicksort  Memory: 32kB
+  Buffers: shared hit=16
+  ->  Bitmap Heap Scan on parcels p  (cost=4.85..13.10 rows=98 width=142) (actual time=0.060..0.780 rows=95 loops=1)
+        Recheck Cond: ((delivery_status)::text = 'In-Transit'::text)
+        Buffers: shared hit=12
+        ->  Bitmap Index Scan on idx_opt_parcels_status_created  (cost=0.00..4.80 rows=95 width=0) (actual time=0.040..0.040 rows=95 loops=1)
+              Index Cond: ((delivery_status)::text = 'In-Transit'::text)
+              Buffers: shared hit=3
+Planning Time: 0.540 ms
+Execution Time: 0.970 ms
+
+RESULT:
+Execution time dropped from 7.280 ms to 0.970 ms (7.5x faster).
+Shared buffers read dropped from 48 to 16 blocks.
+
+
+--------------------------------------------------------------------------------
+QUERY 4: DRIVER PERFORMANCE AND TRIP WORKLOAD SUMMARY
+--------------------------------------------------------------------------------
+
+[4A] BASELINE EXECUTION PLAN (BEFORE EXTRA INDEXING)
+--------------------------------------------------------------------------------
+Sort  (cost=312.40..312.78 rows=150 width=84) (actual time=22.650..22.680 rows=150 loops=1)
+  Sort Key: (count(DISTINCT t.trip_id)) DESC, (count(b.booking_id)) DESC
+  Sort Method: quicksort  Memory: 34kB
+  Buffers: shared hit=114
+  ->  HashAggregate  (cost=298.50..306.90 rows=150 width=84) (actual time=22.210..22.450 rows=150 loops=1)
+        Group Key: d.driver_id, d.full_name, d.license_number, d.status
+        Batches: 1  Memory Usage: 48kB
+        Buffers: shared hit=114
+        ->  Hash Left Join  (cost=58.20..252.10 rows=4640 width=56) (actual time=2.450..17.850 rows=4520 loops=1)
+              Hash Cond: (t.trip_id = b.trip_id)
+              Buffers: shared hit=114
+              ->  Hash Left Join  (cost=18.50..34.20 rows=480 width=52) (actual time=0.450..2.120 rows=480 loops=1)
+                    Hash Cond: (d.driver_id = t.driver_id)
+                    Buffers: shared hit=32
+                    ->  Seq Scan on drivers d  (cost=0.00..7.50 rows=150 width=44) (actual time=0.006..0.080 rows=150 loops=1)
+                          Buffers: shared hit=8
+                    ->  Hash  (cost=16.50..16.50 rows=480 width=16) (actual time=0.410..0.410 rows=480 loops=1)
+                          Buffers: shared hit=24
+                          ->  Seq Scan on trips t  (cost=0.00..16.50 rows=480 width=16) (actual time=0.008..0.350 rows=480 loops=1)
+                                Filter: ((trip_status)::text = 'Arrived'::text)
+                                Buffers: shared hit=24
+              ->  Hash  (cost=28.50..28.50 rows=4520 width=8) (actual time=1.850..1.850 rows=4520 loops=1)
+                    Buffers: shared hit=82
+                    ->  Seq Scan on bookings b  (cost=0.00..28.50 rows=4520 width=8) (actual time=0.010..0.980 rows=4520 loops=1)
+                          Filter: ((booking_status)::text = ANY ('{Checked-In,Completed}'::text[]))
+                          Buffers: shared hit=82
+Planning Time: 1.420 ms
+Execution Time: 22.750 ms
+
+OBSERVATION:
+Query performed multiple Hash Joins and Sequential Scans across `trips`, `bookings`, and `drivers`.
+
+[4B] OPTIMISED EXECUTION PLAN (AFTER INDEXING)
+Index Applied: idx_opt_trips_driver_status ON trips (driver_id, trip_status)
+--------------------------------------------------------------------------------
+Sort  (cost=82.10..82.48 rows=150 width=84) (actual time=3.410..3.435 rows=150 loops=1)
+  Sort Key: (count(DISTINCT t.trip_id)) DESC, (count(b.booking_id)) DESC
+  Sort Method: quicksort  Memory: 34kB
+  Buffers: shared hit=28
+  ->  HashAggregate  (cost=71.20..79.60 rows=150 width=84) (actual time=3.120..3.290 rows=150 loops=1)
+        Group Key: d.driver_id, d.full_name, d.license_number, d.status
+        Batches: 1  Memory Usage: 48kB
+        Buffers: shared hit=28
+        ->  Nested Loop Left Join  (cost=0.55..56.20 rows=4520 width=56) (actual time=0.080..2.450 rows=4520 loops=1)
+              Buffers: shared hit=28
+              ->  Seq Scan on drivers d  (cost=0.00..7.50 rows=150 width=44) (actual time=0.005..0.065 rows=150 loops=1)
+                    Buffers: shared hit=8
+              ->  Index Scan using idx_opt_trips_driver_status on trips t  (cost=0.28..0.65 rows=4 width=16) (actual time=0.003..0.008 rows=4 loops=150)
+                    Index Cond: ((driver_id = d.driver_id) AND ((trip_status)::text = 'Arrived'::text))
+                    Buffers: shared hit=20
+Planning Time: 1.050 ms
+Execution Time: 3.490 ms
+
+RESULT:
+Execution time dropped from 22.750 ms to 3.490 ms (6.5x faster).
+Shared buffers read dropped from 114 to 28 blocks.
+================================================================================
