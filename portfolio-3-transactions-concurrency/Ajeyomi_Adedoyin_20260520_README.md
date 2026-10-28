@@ -103,19 +103,55 @@ To avoid deadlocks, all application services must acquire resource locks in a **
 
 ---
 
-## 7. How to Execute the Concurrency Tests
+## 7. How to Test Concurrency in pgAdmin 4 (Step-by-Step)
 
-To test concurrency control yourself using PostgreSQL:
+You do not need to use the terminal. Concurrency tests simulate two users acting at the same time, which is easily done in **pgAdmin 4** by opening **two separate Query Tool tabs**:
 
-1. **Open Two Terminal Windows side-by-side:**
-   - **Terminal 1:** `psql -U postgres -d adedoyin_mobility`
-   - **Terminal 2:** `psql -U postgres -d adedoyin_mobility`
+1. **Open Two Query Tool Tabs in pgAdmin 4:**
+   - Launch pgAdmin 4 and connect to your database server.
+   - In the left Browser tree, right-click the **`adedoyin_mobility`** database and select **Query Tool**. This is **Tab 1 (Customer A)**.
+   - Right-click the **`adedoyin_mobility`** database a second time and select **Query Tool** again. This opens **Tab 2 (Customer B)**.
+   - You now have two completely independent database sessions running side-by-side.
 
-2. **Run the Row Locking Test:**
-   - In Terminal 1, run lines 67–79 of [Ajeyomi_Adedoyin_20260520_Transactions.sql](Ajeyomi_Adedoyin_20260520_Transactions.sql).
-   - In Terminal 2, run lines 81–89. Observe that Terminal 2 pauses and waits.
-   - Return to Terminal 1, run line 102 (`COMMIT`).
-   - Observe Terminal 2 immediately unblock and display the result.
+2. **Step-by-Step Row-Level Locking Test (`SELECT ... FOR UPDATE`):**
+   - **In Tab 1 (Customer A):** Copy and run the lock query:
+     ```sql
+     BEGIN;
+     SELECT trip_id, trip_status FROM trips WHERE trip_id = 2 FOR UPDATE;
+     ```
+     Press **F5** (Execute). Customer A has acquired an exclusive lock on Trip 2.
+   - **In Tab 2 (Customer B):** Copy and run the concurrent booking attempt:
+     ```sql
+     BEGIN;
+     SELECT trip_id, trip_status FROM trips WHERE trip_id = 2 FOR UPDATE;
+     ```
+     Press **F5** (Execute). Notice the spinning activity indicator in pgAdmin — Tab 2 is safely waiting for Customer A to finish!
+   - **In Tab 1 (Customer A):** Complete Customer A's booking and release the lock:
+     ```sql
+     INSERT INTO bookings (trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference)
+     VALUES (2, 103, 5, 28500.00, 'Confirmed', 'PAY-TXN-SEAT5-WINNER');
+     COMMIT;
+     ```
+     Press **F5**.
+   - **Switch to Tab 2 (Customer B):** As soon as Tab 1 commits, Tab 2 immediately unblocks! When you check the seat status:
+     ```sql
+     SELECT seat_number, booking_status FROM bookings WHERE trip_id = 2 AND seat_number = 5;
+     ```
+     pgAdmin displays that Seat 5 is already `Confirmed` by Customer A.
+   - **In Tab 2:** Safely cancel Customer B's transaction:
+     ```sql
+     ROLLBACK;
+     ```
 
 3. **View Full Test Outputs:**
-   Open [Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt](Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt) to see the exact transcript logs for all 5 scenarios.
+   Open [Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt](Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt) to inspect the complete transcript logs for all 5 scenarios.
+
+---
+
+## 8. Visual Verification Evidence (Screenshots in `assets/`)
+
+| Test Scenario | pgAdmin 4 Verification Screenshot |
+| :--- | :--- |
+| **ACID Commit & Rollback** | ![ACID Commit & Rollback in pgAdmin](assets/acid_commit_rollback.png) |
+| **Row Locking (`SELECT FOR UPDATE`)** | ![Row Locking Wait State in pgAdmin](assets/concurrency_row_locking.png) |
+| **Deadlock Detection Alert** | ![Deadlock Detected Error in pgAdmin](assets/deadlock_detected.png) |

@@ -124,3 +124,33 @@ If we tried to put all data into one giant table:
   - Parcel details are determined by the unique waybill number.
   - Seat allocations are determined by the combination of trip and seat number.
 - All our tables meet BCNF. This means there is no wasted space, no duplicate typing, and updates can be made safely in one place.
+
+---
+
+## 6. How to Run in pgAdmin 4 (Step-by-Step)
+
+You do not need to use the command line terminal. You can run all scripts directly using **pgAdmin 4**:
+
+1. **Create the Database:**
+   - In pgAdmin 4, right-click **Databases** > **Create** > **Database...**
+   - Name it `adedoyin_mobility` and click **Save**.
+
+2. **Run the Schema DDL Script:**
+   - Click to highlight `adedoyin_mobility`.
+   - Open Query Tool (`Tools` > `Query Tool`).
+   - Click **Open File** (`Ctrl + O`), choose `portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Schema.sql`, and press **F5** (Execute).
+   - This builds all 8 tables, foreign keys, and constraints.
+
+3. **Populate Seed Records:**
+   - Click **Open File** (`Ctrl + O`), choose `portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Seed_Data.sql`, and press **F5** (Execute).
+   - This populates all stations, vehicles, drivers, trips, bookings, and parcels.
+
+---
+
+## 7. Visual Verification Evidence (Screenshots in `assets/`)
+
+| Deliverable | Visual Evidence / Screenshot |
+| :--- | :--- |
+| **Entity Relationship Diagram (ERD)** | ![Entity Relationship Diagram](Ajeyomi_Adedoyin_20260520_ERD.png) |
+| **pgAdmin 4 Schema Tables View** | ![pgAdmin Schema Tables](assets/pgadmin_schema_tables.png) |
+| **pgAdmin 4 Seed Data Verification** | ![pgAdmin Seed Data Rows](assets/pgadmin_seed_data.png) |

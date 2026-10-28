@@ -117,6 +117,15 @@ The table below summarizes the performance metrics captured from PostgreSQL 14+ 
 - **Buffer efficiency:** Memory page access dropped by up to **78%**, meaning the database server handles significantly higher user concurrency without disk I/O thrashing.
 - **Scan transition:** The execution plans transitioned from expensive `Seq Scan` filters to direct `Index Scan` and `Bitmap Index Scan` operations.
 
+### Visual pgAdmin 4 Execution Plans (Screenshots in `assets/`)
+
+| Query | pgAdmin 4 Explain / Graphical Plan Screenshot |
+| :--- | :--- |
+| **Query 1: Route Revenue** | ![Query 1 Route Revenue Plan](assets/query1_route_revenue_explain.png) |
+| **Query 2: Trip Dispatch** | ![Query 2 Trip Dispatch Plan](assets/query2_trip_dispatch_explain.png) |
+| **Query 3: Parcel Tracking** | ![Query 3 Parcel Tracking Plan](assets/query3_parcel_tracking_explain.png) |
+| **Query 4: Driver Workload** | ![Query 4 Driver Workload Plan](assets/query4_driver_workload_explain.png) |
+
 ---
 
 ## 6. Practical Trade-offs: Why Not Index Every Column?
@@ -129,19 +138,30 @@ While indexes dramatically speed up read operations (`SELECT`), they introduce t
 
 ---
 
-## 7. How to Execute the Scripts
+## 7. How to Run in pgAdmin 4 (Step-by-Step)
 
-To verify these execution plans locally or in PostgreSQL:
+You do not need to use the command line terminal. You can run all queries and inspect execution plans directly in the **pgAdmin 4** graphical interface:
 
-1. **Open PostgreSQL terminal or pgAdmin:**
-   ```bash
-   psql -U postgres -d adedoyin_mobility
-   ```
+1. **Open pgAdmin 4:**
+   - Launch pgAdmin 4 on your computer and log in to your PostgreSQL server.
+   - In the left-hand Browser panel, expand **Databases** and click on **`adedoyin_mobility`**.
 
-2. **Execute the complete Query and Optimisation script:**
-   ```sql
-   \i portfolio-2-query-optimisation/Ajeyomi_Adedoyin_20260520_Queries.sql
-   ```
+2. **Open the Query Tool:**
+   - From the top menu, click **Tools > Query Tool** (or right-click `adedoyin_mobility` and choose **Query Tool**).
 
-3. **View full text execution plan outputs:**
-   Open [Ajeyomi_Adedoyin_20260520_Query_Execution_Plans.txt](Ajeyomi_Adedoyin_20260520_Query_Execution_Plans.txt) to inspect the raw node graphs and cost breakdowns.
+3. **Load the SQL Script:**
+   - Click the **Open File** icon on the toolbar (folder icon, or press `Ctrl + O`).
+   - Navigate to and open:  
+     `portfolio-2-query-optimisation/Ajeyomi_Adedoyin_20260520_Queries.sql`
+
+4. **Execute Queries and View Results:**
+   - Highlight any query or run the entire script by clicking the **Execute / Refresh** button (play icon, or press `F5`).
+   - The query results will appear in the **Data Output** tab at the bottom.
+
+5. **View Graphical Execution Plans in pgAdmin:**
+   - Highlight a query (e.g., Query 1 or Query 2).
+   - Click the **Explain Analyze** icon on the toolbar (or press `Shift + F7`).
+   - pgAdmin will automatically render a visual flowchart showing node costs, scan types (`Seq Scan` vs `Index Scan`), and actual execution timing.
+
+6. **View Full Text Execution Plan Logs:**
+   - Open [Ajeyomi_Adedoyin_20260520_Query_Execution_Plans.txt](Ajeyomi_Adedoyin_20260520_Query_Execution_Plans.txt) to inspect the complete raw text outputs and cost comparisons.

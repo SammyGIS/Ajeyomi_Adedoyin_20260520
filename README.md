@@ -134,41 +134,42 @@ Ajeyomi_Adedoyin_20260520/
 
 ---
 
-## 6. How to Run and Verify This Project
+## 6. How to Run and Verify This Project in pgAdmin 4
+
+You do not need to use the command line terminal. You can run all portfolio scripts and test execution plans directly using the **pgAdmin 4** graphical interface.
 
 ### 6.1 Prerequisites
-- PostgreSQL 14 or higher (or any standard ANSI SQL engine)
-- Python 3.10+ (for synthetic data generator)
-- `psql` command-line utility or pgAdmin 4
+- **PostgreSQL 14+** and **pgAdmin 4** installed.
+- Python 3.10+ (if you wish to re-generate synthetic datasets in `utils/`).
 
-### 6.2 Step-by-Step Instructions
+### 6.2 Step-by-Step Instructions in pgAdmin 4
 
-1. **Clone the Repository:**
-   ```bash
-   git clone https://github.com/SammyGIS/Ajeyomi_Adedoyin_20260520.git
-   cd Ajeyomi_Adedoyin_20260520
-   ```
+#### **Step 1: Create the Database**
+1. Open **pgAdmin 4** and connect to your local PostgreSQL server.
+2. In the left **Browser** tree, right-click **Databases** and select **Create > Database...**
+3. In the Database field, enter `adedoyin_mobility` and click **Save**.
 
-2. **Set up the Database Schema (Portfolio 1):**
-   ```bash
-   psql -U postgres -d postgres -c "CREATE DATABASE adedoyin_mobility;"
-   psql -U postgres -d adedoyin_mobility -f portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Schema.sql
-   ```
+#### **Step 2: Create the Schema (Portfolio 1)**
+1. In the Browser tree, click on the **`adedoyin_mobility`** database.
+2. Open the Query Tool: click **Tools > Query Tool** from the top menu.
+3. Click the **Open File** icon (folder icon, or press `Ctrl + O`).
+4. Select `portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Schema.sql` and click **Select**.
+5. Click the **Execute / Refresh** button (play icon, or press `F5`).
+6. All 8 tables, foreign keys, and integrity constraints are created.
 
-3. **Load the Seed Data:**
-   ```bash
-   psql -U postgres -d adedoyin_mobility -f portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Seed_Data.sql
-   ```
+#### **Step 3: Load the Seed Data**
+1. In the Query Tool, click **Open File** (`Ctrl + O`).
+2. Select `portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Seed_Data.sql` and click **Select**.
+3. Press `F5` (Execute). This safely populates the database with 6 regional stations, 20 fleet vehicles, 150 drivers, 1,000 customers, 500 trips, 5,000 bookings, and 1,200 parcels.
 
-4. **Run the Optimisation Queries & Execution Plans (Portfolio 2):**
-   ```bash
-   psql -U postgres -d adedoyin_mobility -f portfolio-2-query-optimisation/Ajeyomi_Adedoyin_20260520_Queries.sql
-   ```
+#### **Step 4: Run Query Optimisation & Plans (Portfolio 2)**
+1. In the Query Tool, click **Open File** (`Ctrl + O`).
+2. Select `portfolio-2-query-optimisation/Ajeyomi_Adedoyin_20260520_Queries.sql` and click **Select**.
+3. Highlight any query and press `F5` to execute, or click the **Explain Analyze** icon (`Shift + F7`) to view the visual execution plan.
 
-5. **Execute Transactions & Concurrency Control Scripts (Portfolio 3):**
-   ```bash
-   psql -U postgres -d adedoyin_mobility -f portfolio-3-transactions-concurrency/Ajeyomi_Adedoyin_20260520_Transactions.sql
-   ```
+#### **Step 5: Test Transactions & Concurrency (Portfolio 3)**
+1. Open two separate Query Tool tabs on the `adedoyin_mobility` database (representing Customer A and Customer B).
+2. Follow the step-by-step instructions in [Portfolio 3 README](portfolio-3-transactions-concurrency/Ajeyomi_Adedoyin_20260520_README.md#7-how-to-test-concurrency-in-pgadmin-4-step-by-step) to observe `SELECT ... FOR UPDATE` row locking and race condition prevention.
 
 ---
 
