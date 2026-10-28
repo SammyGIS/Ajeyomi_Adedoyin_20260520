@@ -66,7 +66,11 @@ Ajeyomi_Adedoyin_20260520/
 │   ├── Ajeyomi_Adedoyin_20260520_Queries.sql     # 4 business queries, EXPLAIN commands, and index scripts
 │   └── Ajeyomi_Adedoyin_20260520_Query_Execution_Plans.txt # Text output of execution plans before and after
 │
-├── portfolio-3-transactions-concurrency/         # ACID tests, isolation levels, row-level locking
+├── portfolio-3-transactions-concurrency/
+│   ├── Ajeyomi_Adedoyin_20260520_README.md       # Explanations of ACID, locking, and isolation levels
+│   ├── Ajeyomi_Adedoyin_20260520_Transactions.sql # Executable SQL scripts for Session A and Session B
+│   └── Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt # Text log of terminal tests and deadlock output
+│
 ├── portfolio-4-nosql/                            # Document store for GPS tracking and cargo telemetry
 ├── portfolio-5-distributed-cloud/                # Sharding, replication, and high-availability architecture
 │
@@ -85,7 +89,7 @@ Ajeyomi_Adedoyin_20260520/
 | :--- | :--- | :--- | :---: |
 | **Portfolio 1** | [Database Design & Modelling](portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_README.md) | 8-table relational schema, clean B&W ERD, KYC integration, constraints, and UNF-to-BCNF normalisation | **Completed** |
 | **Portfolio 2** | [Query Optimisation](portfolio-2-query-optimisation/Ajeyomi_Adedoyin_20260520_README.md) | Query execution plans (`EXPLAIN ANALYZE`), B-tree & composite indexes, 6.5x–12.8x speedup | **Completed** |
-| **Portfolio 3** | Transactions & Concurrency | ACID compliance, row locking (`SELECT FOR UPDATE`), preventing double bookings | Scheduled |
+| **Portfolio 3** | [Transactions & Concurrency](portfolio-3-transactions-concurrency/Ajeyomi_Adedoyin_20260520_README.md) | ACID guarantees, row locking (`SELECT FOR UPDATE`), isolation levels, deadlock handling | **Completed** |
 | **Portfolio 4** | NoSQL Databases | Document data modelling, GPS telemetry tracking, JSON storage | Scheduled |
 | **Portfolio 5** | Distributed & Cloud Databases | Regional sharding, database replication, and cloud failover | Scheduled |
 
@@ -122,6 +126,12 @@ Ajeyomi_Adedoyin_20260520/
 | **Query 3: Parcel Tracking** | 7.28 ms | 0.97 ms | **7.5x Faster** | 48 $\rightarrow$ 16 blocks |
 | **Query 4: Driver Workload** | 22.75 ms | 3.49 ms | **6.5x Faster** | 114 $\rightarrow$ 28 blocks |
 
+### 5.3 Portfolio 3: Transactions & Concurrency Control
+- **ACID Demonstrations:** Tested full atomic seat reservations with `COMMIT` upon payment confirmation and automatic clean reversion with `ROLLBACK` on transaction failure.
+- **Race Condition Prevention:** Simulated two passengers simultaneously purchasing the same seat. Implemented pessimistic row-level locking via `SELECT ... FOR UPDATE` to force concurrent sessions to wait safely, preventing double-bookings.
+- **Isolation Levels Analysis:** Compared PostgreSQL's default `READ COMMITTED` against `REPEATABLE READ`, proving snapshot stability for financial and accounting reports.
+- **Deadlock Detection & Resolution:** Tested circular lock dependencies between vehicle updates, observing PostgreSQL's automatic cycle detection and abort mechanism within 1000ms.
+
 ---
 
 ## 6. How to Run and Verify This Project
@@ -153,6 +163,11 @@ Ajeyomi_Adedoyin_20260520/
 4. **Run the Optimisation Queries & Execution Plans (Portfolio 2):**
    ```bash
    psql -U postgres -d adedoyin_mobility -f portfolio-2-query-optimisation/Ajeyomi_Adedoyin_20260520_Queries.sql
+   ```
+
+5. **Execute Transactions & Concurrency Control Scripts (Portfolio 3):**
+   ```bash
+   psql -U postgres -d adedoyin_mobility -f portfolio-3-transactions-concurrency/Ajeyomi_Adedoyin_20260520_Transactions.sql
    ```
 
 ---
