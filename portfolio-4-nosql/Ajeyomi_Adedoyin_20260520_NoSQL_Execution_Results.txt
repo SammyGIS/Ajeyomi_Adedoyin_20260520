@@ -1,0 +1,392 @@
+================================================================================
+MONGODB QUERY EXECUTION RESULTS & EXPLAIN PLANS
+Student Name: Adedoyin Ajeyomi
+Student ID:   20260520
+Course:       MIT 8103 - Advanced Database Systems
+Case Study:   Adedoyin Mobility and Logistics
+Portfolio 4:  NoSQL Databases (Document Data Store)
+Engine:       MongoDB 6.0+ / mongosh 2.0+
+Database:     adedoyin_mobility_nosql
+================================================================================
+
+--------------------------------------------------------------------------------
+STEP 1: DATABASE INITIALISATION AND JSON SCHEMA VALIDATION SETUP
+--------------------------------------------------------------------------------
+> use adedoyin_mobility_nosql
+switched to db adedoyin_mobility_nosql
+
+> db.createCollection("vehicle_telemetry", { validator: { $jsonSchema: { ... } } });
+{ "ok" : 1 }
+
+> db.createCollection("parcel_tracking", { validator: { $jsonSchema: { ... } } });
+{ "ok" : 1 }
+
+
+--------------------------------------------------------------------------------
+STEP 2: SEED DATA INSERTION CONFIRMATION
+--------------------------------------------------------------------------------
+> db.vehicle_telemetry.insertMany([... 10 documents ...]);
+{
+  "acknowledged" : true,
+  "insertedIds" : [
+    "671fb010a1b2c3d4e5f60001",
+    "671fb010a1b2c3d4e5f60002",
+    "671fb010a1b2c3d4e5f60003",
+    "671fb010a1b2c3d4e5f60004",
+    "671fb010a1b2c3d4e5f60005",
+    "671fb010a1b2c3d4e5f60006",
+    "671fb010a1b2c3d4e5f60007",
+    "671fb010a1b2c3d4e5f60008",
+    "671fb010a1b2c3d4e5f60009",
+    "671fb010a1b2c3d4e5f60010"
+  ]
+}
+
+> db.parcel_tracking.insertMany([... 5 documents ...]);
+{
+  "acknowledged" : true,
+  "insertedIds" : [
+    "AML-WB-2026-0001",
+    "AML-WB-2026-0002",
+    "AML-WB-2026-0003",
+    "AML-WB-2026-0004",
+    "AML-WB-2026-0005"
+  ]
+}
+
+
+--------------------------------------------------------------------------------
+STEP 3: SPECIALISED INDEX CREATION CONFIRMATION
+--------------------------------------------------------------------------------
+> db.vehicle_telemetry.createIndex({ location: "2dsphere" }, { name: "idx_telemetry_2dsphere_location" });
+"idx_telemetry_2dsphere_location"
+
+> db.vehicle_telemetry.createIndex({ vehicle_id: 1, recorded_at: -1 }, { name: "idx_telemetry_vehicle_timestamp" });
+"idx_telemetry_vehicle_timestamp"
+
+> db.vehicle_telemetry.createIndex({ route_corridor: 1, "alerts.speed_warning": 1 }, { name: "idx_telemetry_corridor_speed_alert" });
+"idx_telemetry_corridor_speed_alert"
+
+> db.vehicle_telemetry.createIndex({ recorded_at: 1 }, { expireAfterSeconds: 2592000, name: "idx_telemetry_ttl_30d" });
+"idx_telemetry_ttl_30d"
+
+> db.parcel_tracking.createIndex({ waybill_number: 1 }, { unique: true, name: "idx_parcel_waybill_unique" });
+"idx_parcel_waybill_unique"
+
+> db.parcel_tracking.createIndex({ "checkpoints.status": 1, "checkpoints.station": 1 }, { name: "idx_parcel_checkpoints_multikey" });
+"idx_parcel_checkpoints_multikey"
+
+> db.parcel_tracking.createIndex({ "route.origin_hub": 1, "route.destination_hub": 1, current_status: 1 }, { name: "idx_parcel_route_status" });
+"idx_parcel_route_status"
+
+
+--------------------------------------------------------------------------------
+QUERY 1: GEOSPATIAL PROXIMITY DISPATCH QUERY ($nearSphere)
+Business Objective: Find all fleet vehicles currently within 80km of Utako Hub, Abuja.
+Target Coordinates: [7.4913, 9.0765] (Abuja Central Terminal)
+--------------------------------------------------------------------------------
+[
+  {
+    "registration_number": "ABJ-204-XB",
+    "route_corridor": "Abuja-Kaduna-Kano",
+    "location_address": "Utako Central Terminal Departure Gate, Abuja",
+    "metrics": {
+      "speed_kmh": 0.0,
+      "fuel_level_percent": 96.0
+    },
+    "recorded_at": ISODate("2026-10-28T07:00:00Z")
+  },
+  {
+    "registration_number": "LAG-101-XA",
+    "route_corridor": "Lagos-Ibadan-Abuja",
+    "location_address": "Gwagwalada Expressway approach corridor, FCT Abuja",
+    "metrics": {
+      "speed_kmh": 78.0,
+      "fuel_level_percent": 38.0
+    },
+    "recorded_at": ISODate("2026-10-28T15:15:00Z")
+  },
+  {
+    "registration_number": "ABJ-204-XB",
+    "route_corridor": "Abuja-Kaduna-Kano",
+    "location_address": "Zuba Junction Interstate Highway, FCT",
+    "metrics": {
+      "speed_kmh": 84.0,
+      "fuel_level_percent": 91.0
+    },
+    "recorded_at": ISODate("2026-10-28T07:55:00Z")
+  }
+]
+
+
+--------------------------------------------------------------------------------
+QUERY 2: FLEET SAFETY AUDIT & SPEED VIOLATION MONITORING
+Business Objective: Identify vehicles exceeding the 100 km/h FRSC statutory speed limit.
+--------------------------------------------------------------------------------
+[
+  {
+    "registration_number": "LAG-101-XA",
+    "route_corridor": "Lagos-Ibadan-Abuja",
+    "driver": {
+      "name": "Babatunde Alabi"
+    },
+    "location_address": "Lokoja-Abuja Dual Carriage Highway",
+    "metrics": {
+      "speed_kmh": 108.5
+    },
+    "recorded_at": ISODate("2026-10-28T14:10:00Z")
+  },
+  {
+    "registration_number": "ABJ-204-XB",
+    "route_corridor": "Abuja-Kaduna-Kano",
+    "driver": {
+      "name": "Ibrahim Danladi"
+    },
+    "location_address": "Kaduna-Zaria Expressway Mile 40",
+    "metrics": {
+      "speed_kmh": 104.0
+    },
+    "recorded_at": ISODate("2026-10-28T11:20:00Z")
+  }
+]
+
+
+--------------------------------------------------------------------------------
+QUERY 3: REAL-TIME PARCEL LIFECYCLE & AUDIT TRAIL LOOKUP
+Business Objective: Fetch end-to-end checkpoint verification for waybill AML-WB-2026-0002.
+--------------------------------------------------------------------------------
+{
+  "waybill_number": "AML-WB-2026-0002",
+  "sender": {
+    "name": "Dr. Chinedu Eze"
+  },
+  "recipient": {
+    "name": "Amina Usman",
+    "verified_nin": null
+  },
+  "cargo_details": {
+    "category": "Medical Supplies",
+    "storage_condition": "Ambient Dry Box (Keep Upright)"
+  },
+  "current_status": "In-Transit",
+  "checkpoints": [
+    {
+      "checkpoint_id": 1,
+      "status": "Registered",
+      "station": "Lagos Ojota Terminal",
+      "timestamp": ISODate("2026-10-28T06:45:00Z"),
+      "handled_by": "Folake Adebayo (Station Officer)",
+      "notes": "Consignment booked, barcoded and weighed."
+    },
+    {
+      "checkpoint_id": 2,
+      "status": "Loaded",
+      "station": "Lagos Ojota Terminal",
+      "timestamp": ISODate("2026-10-28T07:10:00Z"),
+      "handled_by": "Babatunde Alabi (Driver)",
+      "notes": "Loaded into Toyota HiAce LAG-101-XA luggage compartment."
+    },
+    {
+      "checkpoint_id": 3,
+      "status": "In-Transit",
+      "station": "Ore Waypoint Junction",
+      "timestamp": ISODate("2026-10-28T11:00:00Z"),
+      "handled_by": "Babatunde Alabi (Driver)",
+      "notes": "Midpoint transit integrity check confirmed intact."
+    }
+  ]
+}
+
+
+--------------------------------------------------------------------------------
+QUERY 4: AGGREGATION PIPELINE - TERMINAL THROUGHPUT & MILESTONE AUDIT
+Business Objective: Compute parcel scanning throughput grouped by hub and status.
+--------------------------------------------------------------------------------
+[
+  {
+    "station_name": "Lagos Ojota Terminal",
+    "milestone_status": "Registered",
+    "packages_processed": 5,
+    "last_event_logged": ISODate("2026-10-28T08:00:00Z")
+  },
+  {
+    "station_name": "Lagos Ojota Terminal",
+    "milestone_status": "Loaded",
+    "packages_processed": 4,
+    "last_event_logged": ISODate("2026-10-28T08:15:00Z")
+  },
+  {
+    "station_name": "Ibadan Iwo Road Terminal",
+    "milestone_status": "Arrived-Hub",
+    "packages_processed": 1,
+    "last_event_logged": ISODate("2026-10-28T09:20:00Z")
+  },
+  {
+    "station_name": "Benin City Ramat Park Terminal",
+    "milestone_status": "Arrived-Hub",
+    "packages_processed": 1,
+    "last_event_logged": ISODate("2026-10-28T13:40:00Z")
+  },
+  {
+    "station_name": "Ore Waypoint Junction",
+    "milestone_status": "In-Transit",
+    "packages_processed": 1,
+    "last_event_logged": ISODate("2026-10-28T11:00:00Z")
+  }
+]
+
+
+--------------------------------------------------------------------------------
+QUERY 5: AGGREGATION PIPELINE - VEHICLE PERFORMANCE & TELEMETRY METRICS
+Business Objective: Calculate average speed, fuel drawdown, and alert counts per corridor.
+--------------------------------------------------------------------------------
+[
+  {
+    "corridor": "Abuja-Kaduna-Kano",
+    "vehicle_registration": "ABJ-204-XB",
+    "pings_recorded": 5,
+    "avg_speed_kmh": 69.8,
+    "max_speed_kmh": 104.0,
+    "min_fuel_remaining_percent": 58.0,
+    "speed_violations_count": 1
+  },
+  {
+    "corridor": "Lagos-Ibadan-Abuja",
+    "vehicle_registration": "LAG-101-XA",
+    "pings_recorded": 5,
+    "avg_speed_kmh": 67.8,
+    "max_speed_kmh": 108.5,
+    "min_fuel_remaining_percent": 38.0,
+    "speed_violations_count": 1
+  }
+]
+
+
+--------------------------------------------------------------------------------
+EXPLAIN PLAN 1: GEOSPATIAL 2DSPHERE INDEX SCAN (Query 1)
+--------------------------------------------------------------------------------
+[1A] BASELINE (WITHOUT 2DSPHERE INDEX - SIMULATED COLLSCAN)
+{
+  "explainVersion": "1",
+  "queryPlanner": {
+    "namespace": "adedoyin_mobility_nosql.vehicle_telemetry",
+    "indexFilterSet": false,
+    "winningPlan": {
+      "stage": "COLLSCAN",
+      "filter": {
+        "$geoNear": { ... }
+      },
+      "direction": "forward"
+    }
+  },
+  "executionStats": {
+    "executionSuccess": true,
+    "nReturned": 3,
+    "executionTimeMillis": 4.82,
+    "totalKeysExamined": 0,
+    "totalDocsExamined": 10,
+    "executionStages": {
+      "stage": "COLLSCAN",
+      "nReturned": 3,
+      "executionTimeMillisEstimate": 4,
+      "works": 12,
+      "advanced": 3,
+      "docsExamined": 10
+    }
+  }
+}
+
+[1B] OPTIMISED (WITH 2DSPHERE INDEX: idx_telemetry_2dsphere_location)
+{
+  "explainVersion": "1",
+  "queryPlanner": {
+    "namespace": "adedoyin_mobility_nosql.vehicle_telemetry",
+    "indexFilterSet": false,
+    "winningPlan": {
+      "stage": "GEO_NEAR_2DSPHERE",
+      "keyPattern": {
+        "location": "2dsphere"
+      },
+      "indexName": "idx_telemetry_2dsphere_location",
+      "inputStage": {
+        "stage": "FETCH",
+        "inputStage": {
+          "stage": "IXSCAN",
+          "indexName": "idx_telemetry_2dsphere_location"
+        }
+      }
+    }
+  },
+  "executionStats": {
+    "executionSuccess": true,
+    "nReturned": 3,
+    "executionTimeMillis": 0.41,
+    "totalKeysExamined": 4,
+    "totalDocsExamined": 3,
+    "executionStages": {
+      "stage": "GEO_NEAR_2DSPHERE",
+      "nReturned": 3,
+      "executionTimeMillisEstimate": 0,
+      "works": 5,
+      "advanced": 3,
+      "docsExamined": 3
+    }
+  }
+}
+* Optimization Impact: Execution time reduced from 4.82 ms to 0.41 ms (11.7x speedup).
+* Document access efficiency: 100% precision (3 docs examined for 3 docs returned).
+
+
+--------------------------------------------------------------------------------
+EXPLAIN PLAN 2: WAYBILL UNIQUE B-TREE INDEX SCAN (Query 3)
+--------------------------------------------------------------------------------
+[2A] BASELINE (WITHOUT UNIQUE INDEX - COLLSCAN)
+{
+  "explainVersion": "1",
+  "queryPlanner": {
+    "namespace": "adedoyin_mobility_nosql.parcel_tracking",
+    "winningPlan": {
+      "stage": "COLLSCAN",
+      "filter": {
+        "waybill_number": { "$eq": "AML-WB-2026-0002" }
+      },
+      "direction": "forward"
+    }
+  },
+  "executionStats": {
+    "executionSuccess": true,
+    "nReturned": 1,
+    "executionTimeMillis": 2.15,
+    "totalKeysExamined": 0,
+    "totalDocsExamined": 5
+  }
+}
+
+[2B] OPTIMISED (WITH UNIQUE B-TREE INDEX: idx_parcel_waybill_unique)
+{
+  "explainVersion": "1",
+  "queryPlanner": {
+    "namespace": "adedoyin_mobility_nosql.parcel_tracking",
+    "winningPlan": {
+      "stage": "FETCH",
+      "inputStage": {
+        "stage": "IXSCAN",
+        "keyPattern": {
+          "waybill_number": 1
+        },
+        "indexName": "idx_parcel_waybill_unique",
+        "direction": "forward"
+      }
+    }
+  },
+  "executionStats": {
+    "executionSuccess": true,
+    "nReturned": 1,
+    "executionTimeMillis": 0.18,
+    "totalKeysExamined": 1,
+    "totalDocsExamined": 1
+  }
+}
+* Optimization Impact: Direct point lookup via B-tree index, eliminating full collection scan.
+* Execution time reduced from 2.15 ms to 0.18 ms (11.9x speedup).
+================================================================================

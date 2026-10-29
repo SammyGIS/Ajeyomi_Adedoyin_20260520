@@ -1,0 +1,402 @@
+[
+  {
+    "_id": "671fb010a1b2c3d4e5f60001",
+    "vehicle_id": 1,
+    "registration_number": "LAG-101-XA",
+    "vehicle_type": "Toyota HiAce Bus (16 Seats)",
+    "gps_tracker_id": "GPS-AML-001",
+    "route_corridor": "Lagos-Ibadan-Abuja",
+    "current_trip_id": 1,
+    "driver": {
+      "driver_id": 1,
+      "name": "Babatunde Alabi",
+      "license_number": "AAA12345678"
+    },
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        3.3792,
+        6.5244
+      ]
+    },
+    "location_address": "Ojota Regional Terminal Exit, Lagos",
+    "metrics": {
+      "speed_kmh": 45.0,
+      "fuel_level_percent": 95.0,
+      "engine_temp_celsius": 86.0,
+      "odometer_km": 142350.0
+    },
+    "alerts": {
+      "speed_warning": false,
+      "harsh_braking": false,
+      "engine_temp_warning": false,
+      "fuel_leak_detected": false
+    },
+    "device_status": {
+      "battery_health": "Good",
+      "cellular_signal_dbm": -68,
+      "firmware_version": "v3.4.1"
+    },
+    "recorded_at": "2026-10-28T06:30:00Z"
+  },
+  {
+    "_id": "671fb010a1b2c3d4e5f60002",
+    "vehicle_id": 1,
+    "registration_number": "LAG-101-XA",
+    "vehicle_type": "Toyota HiAce Bus (16 Seats)",
+    "gps_tracker_id": "GPS-AML-001",
+    "route_corridor": "Lagos-Ibadan-Abuja",
+    "current_trip_id": 1,
+    "driver": {
+      "driver_id": 1,
+      "name": "Babatunde Alabi",
+      "license_number": "AAA12345678"
+    },
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        3.6184,
+        6.892
+      ]
+    },
+    "location_address": "Lagos-Ibadan Expressway, Sagamu Interchange",
+    "metrics": {
+      "speed_kmh": 92.5,
+      "fuel_level_percent": 88.0,
+      "engine_temp_celsius": 89.5,
+      "odometer_km": 142412.0
+    },
+    "alerts": {
+      "speed_warning": false,
+      "harsh_braking": false,
+      "engine_temp_warning": false,
+      "fuel_leak_detected": false
+    },
+    "device_status": {
+      "battery_health": "Good",
+      "cellular_signal_dbm": -75,
+      "firmware_version": "v3.4.1"
+    },
+    "recorded_at": "2026-10-28T07:45:00Z"
+  },
+  {
+    "_id": "671fb010a1b2c3d4e5f60003",
+    "vehicle_id": 1,
+    "registration_number": "LAG-101-XA",
+    "vehicle_type": "Toyota HiAce Bus (16 Seats)",
+    "gps_tracker_id": "GPS-AML-001",
+    "route_corridor": "Lagos-Ibadan-Abuja",
+    "current_trip_id": 1,
+    "driver": {
+      "driver_id": 1,
+      "name": "Babatunde Alabi",
+      "license_number": "AAA12345678"
+    },
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        3.9167,
+        7.3775
+      ]
+    },
+    "location_address": "Iwo Road Interchange Hub, Ibadan",
+    "metrics": {
+      "speed_kmh": 15.0,
+      "fuel_level_percent": 81.0,
+      "engine_temp_celsius": 91.0,
+      "odometer_km": 142485.0
+    },
+    "alerts": {
+      "speed_warning": false,
+      "harsh_braking": false,
+      "engine_temp_warning": false,
+      "fuel_leak_detected": false
+    },
+    "device_status": {
+      "battery_health": "Good",
+      "cellular_signal_dbm": -70,
+      "firmware_version": "v3.4.1"
+    },
+    "recorded_at": "2026-10-28T09:10:00Z"
+  },
+  {
+    "_id": "671fb010a1b2c3d4e5f60004",
+    "vehicle_id": 1,
+    "registration_number": "LAG-101-XA",
+    "vehicle_type": "Toyota HiAce Bus (16 Seats)",
+    "gps_tracker_id": "GPS-AML-001",
+    "route_corridor": "Lagos-Ibadan-Abuja",
+    "current_trip_id": 1,
+    "driver": {
+      "driver_id": 1,
+      "name": "Babatunde Alabi",
+      "license_number": "AAA12345678"
+    },
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        6.052,
+        8.421
+      ]
+    },
+    "location_address": "Lokoja-Abuja Expressway, Koton-Karfe corridor",
+    "metrics": {
+      "speed_kmh": 108.0,
+      "fuel_level_percent": 58.5,
+      "engine_temp_celsius": 95.5,
+      "odometer_km": 142820.0
+    },
+    "alerts": {
+      "speed_warning": true,
+      "harsh_braking": false,
+      "engine_temp_warning": false,
+      "fuel_leak_detected": false
+    },
+    "device_status": {
+      "battery_health": "Good",
+      "cellular_signal_dbm": -84,
+      "firmware_version": "v3.4.1"
+    },
+    "recorded_at": "2026-10-28T13:45:00Z"
+  },
+  {
+    "_id": "671fb010a1b2c3d4e5f60005",
+    "vehicle_id": 2,
+    "registration_number": "ABJ-202-BC",
+    "vehicle_type": "Toyota Sienna Minivan (7 Seats)",
+    "gps_tracker_id": "GPS-AML-002",
+    "route_corridor": "Abuja-Kaduna-Kano",
+    "current_trip_id": 4,
+    "driver": {
+      "driver_id": 2,
+      "name": "Chukwudi Okonkwo",
+      "license_number": "BBB87654321"
+    },
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        7.4913,
+        9.0765
+      ]
+    },
+    "location_address": "Utako Central Terminal, Abuja",
+    "metrics": {
+      "speed_kmh": 0.0,
+      "fuel_level_percent": 100.0,
+      "engine_temp_celsius": 78.0,
+      "odometer_km": 98450.0
+    },
+    "alerts": {
+      "speed_warning": false,
+      "harsh_braking": false,
+      "engine_temp_warning": false,
+      "fuel_leak_detected": false
+    },
+    "device_status": {
+      "battery_health": "Excellent",
+      "cellular_signal_dbm": -62,
+      "firmware_version": "v3.4.1"
+    },
+    "recorded_at": "2026-10-28T07:00:00Z"
+  },
+  {
+    "_id": "671fb010a1b2c3d4e5f60006",
+    "vehicle_id": 2,
+    "registration_number": "ABJ-202-BC",
+    "vehicle_type": "Toyota Sienna Minivan (7 Seats)",
+    "gps_tracker_id": "GPS-AML-002",
+    "route_corridor": "Abuja-Kaduna-Kano",
+    "current_trip_id": 4,
+    "driver": {
+      "driver_id": 2,
+      "name": "Chukwudi Okonkwo",
+      "license_number": "BBB87654321"
+    },
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        7.4382,
+        10.5105
+      ]
+    },
+    "location_address": "Abuja-Kaduna Dual Carriage, Toll Gate Bypass",
+    "metrics": {
+      "speed_kmh": 104.2,
+      "fuel_level_percent": 82.0,
+      "engine_temp_celsius": 93.0,
+      "odometer_km": 98640.0
+    },
+    "alerts": {
+      "speed_warning": true,
+      "harsh_braking": false,
+      "engine_temp_warning": false,
+      "fuel_leak_detected": false
+    },
+    "device_status": {
+      "battery_health": "Good",
+      "cellular_signal_dbm": -81,
+      "firmware_version": "v3.4.1"
+    },
+    "recorded_at": "2026-10-28T09:30:00Z"
+  },
+  {
+    "_id": "671fb010a1b2c3d4e5f60007",
+    "vehicle_id": 2,
+    "registration_number": "ABJ-202-BC",
+    "vehicle_type": "Toyota Sienna Minivan (7 Seats)",
+    "gps_tracker_id": "GPS-AML-002",
+    "route_corridor": "Abuja-Kaduna-Kano",
+    "current_trip_id": 4,
+    "driver": {
+      "driver_id": 2,
+      "name": "Chukwudi Okonkwo",
+      "license_number": "BBB87654321"
+    },
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        8.5167,
+        12.0
+      ]
+    },
+    "location_address": "Sabon Gari Regional Terminal, Kano",
+    "metrics": {
+      "speed_kmh": 0.0,
+      "fuel_level_percent": 48.0,
+      "engine_temp_celsius": 84.0,
+      "odometer_km": 98920.0
+    },
+    "alerts": {
+      "speed_warning": false,
+      "harsh_braking": false,
+      "engine_temp_warning": false,
+      "fuel_leak_detected": false
+    },
+    "device_status": {
+      "battery_health": "Good",
+      "cellular_signal_dbm": -66,
+      "firmware_version": "v3.4.1"
+    },
+    "recorded_at": "2026-10-28T13:00:00Z"
+  },
+  {
+    "_id": "671fb010a1b2c3d4e5f60008",
+    "vehicle_id": 3,
+    "registration_number": "BEN-303-CD",
+    "vehicle_type": "Toyota HiAce Bus (16 Seats)",
+    "gps_tracker_id": "GPS-AML-003",
+    "route_corridor": "Benin-Ore-Lagos",
+    "current_trip_id": 7,
+    "driver": {
+      "driver_id": 3,
+      "name": "Ibrahim Danladi",
+      "license_number": "CCC11223344"
+    },
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        5.6037,
+        6.335
+      ]
+    },
+    "location_address": "Ramat Park Terminal, Benin City",
+    "metrics": {
+      "speed_kmh": 0.0,
+      "fuel_level_percent": 98.0,
+      "engine_temp_celsius": 76.0,
+      "odometer_km": 115200.0
+    },
+    "alerts": {
+      "speed_warning": false,
+      "harsh_braking": false,
+      "engine_temp_warning": false,
+      "fuel_leak_detected": false
+    },
+    "device_status": {
+      "battery_health": "Good",
+      "cellular_signal_dbm": -69,
+      "firmware_version": "v3.4.1"
+    },
+    "recorded_at": "2026-10-28T06:00:00Z"
+  },
+  {
+    "_id": "671fb010a1b2c3d4e5f60009",
+    "vehicle_id": 3,
+    "registration_number": "BEN-303-CD",
+    "vehicle_type": "Toyota HiAce Bus (16 Seats)",
+    "gps_tracker_id": "GPS-AML-003",
+    "route_corridor": "Benin-Ore-Lagos",
+    "current_trip_id": 7,
+    "driver": {
+      "driver_id": 3,
+      "name": "Ibrahim Danladi",
+      "license_number": "CCC11223344"
+    },
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        4.882,
+        6.745
+      ]
+    },
+    "location_address": "Sagamu-Benin Expressway, Ore Waypoint Rest Stop",
+    "metrics": {
+      "speed_kmh": 78.0,
+      "fuel_level_percent": 74.0,
+      "engine_temp_celsius": 90.0,
+      "odometer_km": 115340.0
+    },
+    "alerts": {
+      "speed_warning": false,
+      "harsh_braking": false,
+      "engine_temp_warning": false,
+      "fuel_leak_detected": false
+    },
+    "device_status": {
+      "battery_health": "Good",
+      "cellular_signal_dbm": -79,
+      "firmware_version": "v3.4.1"
+    },
+    "recorded_at": "2026-10-28T08:50:00Z"
+  },
+  {
+    "_id": "671fb010a1b2c3d4e5f60010",
+    "vehicle_id": 4,
+    "registration_number": "ENU-404-EF",
+    "vehicle_type": "Toyota Sienna Minivan (7 Seats)",
+    "gps_tracker_id": "GPS-AML-004",
+    "route_corridor": "Enugu-Makurdi-Abuja",
+    "current_trip_id": 11,
+    "driver": {
+      "driver_id": 4,
+      "name": "Emeka Okereke",
+      "license_number": "DDD55667788"
+    },
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        7.5086,
+        6.4584
+      ]
+    },
+    "location_address": "Holy Ghost Regional Terminal, Enugu",
+    "metrics": {
+      "speed_kmh": 0.0,
+      "fuel_level_percent": 96.0,
+      "engine_temp_celsius": 75.0,
+      "odometer_km": 87400.0
+    },
+    "alerts": {
+      "speed_warning": false,
+      "harsh_braking": false,
+      "engine_temp_warning": false,
+      "fuel_leak_detected": false
+    },
+    "device_status": {
+      "battery_health": "Good",
+      "cellular_signal_dbm": -71,
+      "firmware_version": "v3.4.1"
+    },
+    "recorded_at": "2026-10-28T06:15:00Z"
+  }
+]
