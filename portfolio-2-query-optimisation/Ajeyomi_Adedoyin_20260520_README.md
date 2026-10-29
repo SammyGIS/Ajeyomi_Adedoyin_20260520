@@ -105,6 +105,8 @@ Queries that perform `JOIN` operations on foreign keys alongside status filters 
 
 The table below summarizes the performance metrics captured from PostgreSQL 14+ with our operational dataset:
 
+![Query Optimisation Execution Time Comparison](assets/Ajeyomi_Adedoyin_20260520_Query_Performance_Comparison.png)
+
 | Query Description | Baseline Execution Time | Optimised Execution Time | Speedup Factor | Baseline Cost | Optimised Cost | Buffers Read (Before $\rightarrow$ After) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Query 1: Route Revenue** | 18.52 ms | 2.18 ms | **8.5x Faster** | 284.70 | 65.35 | 82 $\rightarrow$ 18 blocks |
@@ -112,19 +114,11 @@ The table below summarizes the performance metrics captured from PostgreSQL 14+ 
 | **Query 3: Parcel Tracking** | 7.28 ms | 0.97 ms | **7.5x Faster** | 58.65 | 16.45 | 48 $\rightarrow$ 16 blocks |
 | **Query 4: Driver Workload** | 22.75 ms | 3.49 ms | **6.5x Faster** | 312.78 | 82.48 | 114 $\rightarrow$ 28 blocks |
 
-### Key Findings:
+### Key Performance Takeaways:
 - **Average latency reduction:** Across all four queries, execution time improved by **over 80%**.
 - **Buffer efficiency:** Memory page access dropped by up to **78%**, meaning the database server handles significantly higher user concurrency without disk I/O thrashing.
-- **Scan transition:** The execution plans transitioned from expensive `Seq Scan` filters to direct `Index Scan` and `Bitmap Index Scan` operations.
-
-### Visual pgAdmin 4 Execution Plans (Screenshots in `assets/`)
-
-| Query | pgAdmin 4 Explain / Graphical Plan Screenshot |
-| :--- | :--- |
-| **Query 1: Route Revenue** | ![Query 1 Route Revenue Plan](assets/query1_route_revenue_explain.png) |
-| **Query 2: Trip Dispatch** | ![Query 2 Trip Dispatch Plan](assets/query2_trip_dispatch_explain.png) |
-| **Query 3: Parcel Tracking** | ![Query 3 Parcel Tracking Plan](assets/query3_parcel_tracking_explain.png) |
-| **Query 4: Driver Workload** | ![Query 4 Driver Workload Plan](assets/query4_driver_workload_explain.png) |
+- **Scan transition:** The execution plans transitioned from expensive sequential table scans (`Seq Scan`) to direct `Index Scan` and `Bitmap Index Scan` operations.
+- **Execution Plans Source:** Complete verifiable execution plans and buffer stats before and after optimization are recorded in [`Ajeyomi_Adedoyin_20260520_Query_Execution_Plans.txt`](Ajeyomi_Adedoyin_20260520_Query_Execution_Plans.txt).
 
 ---
 

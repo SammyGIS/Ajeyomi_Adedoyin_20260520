@@ -13,14 +13,14 @@
 
 ## 1. Project Overview
 
-This repository contains the practical portfolio work for **MIT 8103: Advanced Database Systems**. The portfolio demonstrates real-world database design, implementation, analysis, and optimisation using a realistic Nigerian transport and courier enterprise: **Adedoyin Mobility and Logistics**.
+This repository contains the comprehensive practical portfolio work for **MIT 8103: Advanced Database Systems**. The portfolio demonstrates real-world database design, implementation, analysis, optimisation, and distributed cloud deployment using a realistic Nigerian transport and courier enterprise: **Adedoyin Mobility and Logistics**.
 
 The portfolio covers five core database engineering areas:
 1. **Portfolio 1: Database Design and Modelling** (Relational schemas, ER diagrams, business constraints, and normalisation)
 2. **Portfolio 2: Query Processing and Optimisation** (Execution plans, indexing strategies, and query tuning)
 3. **Portfolio 3: Transactions and Concurrency** (ACID guarantees, row locking, and avoiding race conditions)
-4. **Portfolio 4: NoSQL Databases** (Document stores, JSON telemetry, and polyglot persistence)
-5. **Portfolio 5: Distributed and Cloud Databases** (Sharding, replication, failover, and high availability)
+4. **Portfolio 4: NoSQL Databases** (Document stores, JSON telemetry, geospatial indexing, and polyglot persistence)
+5. **Portfolio 5: Distributed and Cloud Databases** (Corridor sharding, replication, Patroni HA failover, and high availability)
 
 ---
 
@@ -55,26 +55,49 @@ Every file in this repository strictly follows the university naming pattern:
 Ajeyomi_Adedoyin_20260520/
 │
 ├── portfolio-1-database-design/
+│   ├── assets/
+│   │   └── Ajeyomi_Adedoyin_20260520_ERD.png         # Clean black-and-white Entity Relationship Diagram
 │   ├── Ajeyomi_Adedoyin_20260520_README.md       # Full design report, schema catalog, normalisation
-│   ├── Ajeyomi_Adedoyin_20260520_ERD.png         # Clean black-and-white Entity Relationship Diagram
 │   ├── Ajeyomi_Adedoyin_20260520_Schema.sql      # Executable DDL SQL table schemas & constraints
 │   ├── Ajeyomi_Adedoyin_20260520_Seed_Data.sql   # SQL seed records for hubs, vehicles, and trips
 │   └── Ajeyomi_Adedoyin_20260520_Copy_From_CSV.sql # Script to load data directly from CSV files
 │
 ├── portfolio-2-query-optimisation/
+│   ├── assets/
+│   │   └── Ajeyomi_Adedoyin_20260520_Query_Performance_Comparison.png # Execution benchmark visual chart
 │   ├── Ajeyomi_Adedoyin_20260520_README.md       # Query explanations, execution plans, and benchmarks
 │   ├── Ajeyomi_Adedoyin_20260520_Queries.sql     # 4 business queries, EXPLAIN commands, and index scripts
 │   └── Ajeyomi_Adedoyin_20260520_Query_Execution_Plans.txt # Text output of execution plans before and after
 │
 ├── portfolio-3-transactions-concurrency/
+│   ├── assets/
+│   │   └── Ajeyomi_Adedoyin_20260520_Concurrency_Locking_Workflow.png # Row-level locking sequence diagram
 │   ├── Ajeyomi_Adedoyin_20260520_README.md       # Explanations of ACID, locking, and isolation levels
 │   ├── Ajeyomi_Adedoyin_20260520_Transactions.sql # Executable SQL scripts for Session A and Session B
 │   └── Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt # Text log of terminal tests and deadlock output
 │
-├── portfolio-4-nosql/                            # Document store for GPS tracking and cargo telemetry
-├── portfolio-5-distributed-cloud/                # Sharding, replication, and high-availability architecture
+├── portfolio-4-nosql/
+│   ├── assets/
+│   │   └── Ajeyomi_Adedoyin_20260520_NoSQL_Document_Architecture.png # Polyglot persistence architecture diagram
+│   ├── Ajeyomi_Adedoyin_20260520_README.md       # Comprehensive NoSQL document store report
+│   ├── Ajeyomi_Adedoyin_20260520_NoSQL_Model.json # JSON data model specification for collections
+│   ├── Ajeyomi_Adedoyin_20260520_MongoDB_Queries.js # Mongosh script (validators, 2dsphere index, aggregations)
+│   └── Ajeyomi_Adedoyin_20260520_NoSQL_Execution_Results.txt # Mongosh execution output and explain plans
 │
-├── data/                                         # Generated CSV datasets (stations, vehicles, trips, etc.)
+├── portfolio-5-distributed-cloud/
+│   ├── assets/
+│   │   └── Ajeyomi_Adedoyin_20260520_Distributed_Cluster_Topology.png # Multi-region cloud topology diagram
+│   ├── Ajeyomi_Adedoyin_20260520_README.md       # Distributed sharding, replication, and failover report
+│   ├── Ajeyomi_Adedoyin_20260520_Sharding_and_Replication.sql # Declarative partitioning, FDW, and replication DDL
+│   └── Ajeyomi_Adedoyin_20260520_Replication_Failover_Simulation.txt # Patroni HA failover logs and pruning output
+│
+├── data/                                         # Central Data Repository (All data: CSV, XLSX, and JSON)
+│   ├── Ajeyomi_Adedoyin_20260520_Adedoyin_Mobility_Data.xlsx # Full multi-sheet Excel workbook
+│   ├── Ajeyomi_Adedoyin_20260520_NoSQL_Model.json            # Full NoSQL document database export
+│   ├── vehicle_telemetry.json                                # Standalone IoT GPS telemetry collection
+│   ├── parcel_tracking.json                                  # Standalone express parcel tracking collection
+│   └── *.csv (stations, vehicles, drivers, customers, routes, trips, bookings, parcels)
+│
 ├── utils/                                        # Python synthetic data generator script
 ├── Ajeyomi_Adedoyin_20260520_LMS_Documentation.docx  # 2-3 page summary document for LMS submission
 ├── Ajeyomi_Adedoyin_20260520_README.md               # Main student portfolio overview
@@ -90,8 +113,8 @@ Ajeyomi_Adedoyin_20260520/
 | **Portfolio 1** | [Database Design & Modelling](portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_README.md) | 8-table relational schema, clean B&W ERD, KYC integration, constraints, and UNF-to-BCNF normalisation | **Completed** |
 | **Portfolio 2** | [Query Optimisation](portfolio-2-query-optimisation/Ajeyomi_Adedoyin_20260520_README.md) | Query execution plans (`EXPLAIN ANALYZE`), B-tree & composite indexes, 6.5x–12.8x speedup | **Completed** |
 | **Portfolio 3** | [Transactions & Concurrency](portfolio-3-transactions-concurrency/Ajeyomi_Adedoyin_20260520_README.md) | ACID guarantees, row locking (`SELECT FOR UPDATE`), isolation levels, deadlock handling | **Completed** |
-| **Portfolio 4** | NoSQL Databases | Document data modelling, GPS telemetry tracking, JSON storage | Scheduled |
-| **Portfolio 5** | Distributed & Cloud Databases | Regional sharding, database replication, and cloud failover | Scheduled |
+| **Portfolio 4** | [NoSQL Databases](portfolio-4-nosql/Ajeyomi_Adedoyin_20260520_README.md) | BSON document store, 2dsphere geospatial dispatch, TTL auto-expiration, aggregation pipelines | **Completed** |
+| **Portfolio 5** | [Distributed & Cloud Databases](portfolio-5-distributed-cloud/Ajeyomi_Adedoyin_20260520_README.md) | Corridor sharding, partition pruning, synchronous WAL streaming, Patroni HA automatic failover | **Completed** |
 
 ---
 
@@ -132,44 +155,38 @@ Ajeyomi_Adedoyin_20260520/
 - **Isolation Levels Analysis:** Compared PostgreSQL's default `READ COMMITTED` against `REPEATABLE READ`, proving snapshot stability for financial and accounting reports.
 - **Deadlock Detection & Resolution:** Tested circular lock dependencies between vehicle updates, observing PostgreSQL's automatic cycle detection and abort mechanism within 1000ms.
 
+### 5.4 Portfolio 4: NoSQL Databases (Document Data Store)
+- **Document Data Model:** Implemented MongoDB BSON collections for high-frequency IoT fleet telemetry and parcel milestone tracking.
+- **Geospatial & Time-Series Indexing:** Configured `2dsphere` spherical indexes for dispatch proximity ($< 80\text{ km}$ from hubs), compound B-tree indexes for time-series queries, and 30-day Time-To-Live (TTL) automated data expiration.
+- **Aggregation Pipelines:** Built analytical pipelines unwinding nested checkpoints for station throughput and rolling up fuel/speed metrics across highway corridors.
+- **Polyglot Persistence:** Established an enterprise architecture combining PostgreSQL (for ACID bookings and financial ledger) and MongoDB (for IoT telemetry and flexible cargo tracking).
+
+### 5.5 Portfolio 5: Distributed & Cloud Databases
+- **Corridor Sharding & Pruning:** Implemented declarative `LIST` partitioning on `origin_region`, pruning unused regional tables and slashing query buffer reads from 12 blocks down to 2 blocks.
+- **Multi-Node FDW Integration:** Prepared distributed foreign table routing using `postgres_fdw` across Lagos, Abuja, and Kano nodes.
+- **Synchronous Streaming Replication:** Designed WAL replication parameters (`synchronous_commit = remote_write`) ensuring zero data loss ($\text{RPO} = 0$).
+- **High Availability & Automated Failover:** Configured Patroni with etcd distributed consensus, achieving automatic leader promotion and virtual floating IP re-routing in under 10 seconds ($\text{RTO} \le 8\text{ s}$) with `pg_rewind` split-brain healing.
+
 ---
 
-## 6. How to Run and Verify This Project in pgAdmin 4
+## 6. How to Run and Verify This Project
 
-You do not need to use the command line terminal. You can run all portfolio scripts and test execution plans directly using the **pgAdmin 4** graphical interface.
-
-### 6.1 Prerequisites
-- **PostgreSQL 14+** and **pgAdmin 4** installed.
-- Python 3.10+ (if you wish to re-generate synthetic datasets in `utils/`).
-
-### 6.2 Step-by-Step Instructions in pgAdmin 4
-
-#### **Step 1: Create the Database**
+### 6.1 Relational Database Modules (Portfolios 1, 2, 3, 5) in pgAdmin 4
 1. Open **pgAdmin 4** and connect to your local PostgreSQL server.
-2. In the left **Browser** tree, right-click **Databases** and select **Create > Database...**
-3. In the Database field, enter `adedoyin_mobility` and click **Save**.
+2. Create database `adedoyin_mobility`.
+3. Execute `portfolio-1-database-design/Ajeyomi_Adedoyin_Schema.sql` to generate all 8 tables and constraints.
+4. Execute `portfolio-1-database-design/Ajeyomi_Adedoyin_Seed_Data.sql` to populate 5,000+ bookings and trips.
+5. Execute `portfolio-2-query-optimisation/Ajeyomi_Adedoyin_Queries.sql` to test query execution plans (`EXPLAIN ANALYZE`).
+6. Test concurrency in dual tabs using instructions in `portfolio-3-transactions-concurrency/Ajeyomi_Adedoyin_README.md`.
+7. Execute `portfolio-5-distributed-cloud/Ajeyomi_Adedoyin_Sharding_and_Replication.sql` to test partition pruning and replication configurations.
 
-#### **Step 2: Create the Schema (Portfolio 1)**
-1. In the Browser tree, click on the **`adedoyin_mobility`** database.
-2. Open the Query Tool: click **Tools > Query Tool** from the top menu.
-3. Click the **Open File** icon (folder icon, or press `Ctrl + O`).
-4. Select `portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Schema.sql` and click **Select**.
-5. Click the **Execute / Refresh** button (play icon, or press `F5`).
-6. All 8 tables, foreign keys, and integrity constraints are created.
-
-#### **Step 3: Load the Seed Data**
-1. In the Query Tool, click **Open File** (`Ctrl + O`).
-2. Select `portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Seed_Data.sql` and click **Select**.
-3. Press `F5` (Execute). This safely populates the database with 6 regional stations, 20 fleet vehicles, 150 drivers, 1,000 customers, 500 trips, 5,000 bookings, and 1,200 parcels.
-
-#### **Step 4: Run Query Optimisation & Plans (Portfolio 2)**
-1. In the Query Tool, click **Open File** (`Ctrl + O`).
-2. Select `portfolio-2-query-optimisation/Ajeyomi_Adedoyin_20260520_Queries.sql` and click **Select**.
-3. Highlight any query and press `F5` to execute, or click the **Explain Analyze** icon (`Shift + F7`) to view the visual execution plan.
-
-#### **Step 5: Test Transactions & Concurrency (Portfolio 3)**
-1. Open two separate Query Tool tabs on the `adedoyin_mobility` database (representing Customer A and Customer B).
-2. Follow the step-by-step instructions in [Portfolio 3 README](portfolio-3-transactions-concurrency/Ajeyomi_Adedoyin_20260520_README.md#7-how-to-test-concurrency-in-pgadmin-4-step-by-step) to observe `SELECT ... FOR UPDATE` row locking and race condition prevention.
+### 6.2 NoSQL Module (Portfolio 4) in MongoDB Compass / mongosh
+1. Start MongoDB: `mongod --dbpath /path/to/data`.
+2. Execute the query script in `mongosh`:
+   ```bash
+   load("portfolio-4-nosql/Ajeyomi_Adedoyin_20260520_MongoDB_Queries.js")
+   ```
+3. Alternatively, in **MongoDB Compass**, import `portfolio-4-nosql/Ajeyomi_Adedoyin_20260520_NoSQL_Model.json` into database `adedoyin_mobility_nosql` to inspect collections and visual aggregation pipelines.
 
 ---
 
@@ -180,9 +197,9 @@ This portfolio was developed in full compliance with MIVA Open University's acad
 1. **AI Tools Used:** Generative AI assistant (Google Antigravity / Gemini) was utilised as an interactive learning aid and pair-programming assistant.
 2. **Purpose of Use:**
    - Brainstorming realistic transport corridors, vehicle configurations, and KYC requirements in Nigeria.
-   - Assisting with synthetic data generation scripts and formatting markdown tables.
-   - Reviewing query execution plan nodes and index explanations.
+   - Assisting with synthetic data generation scripts, JSON document schemas, and formatting markdown tables.
+   - Reviewing query execution plan nodes, geospatial indexes, and high-availability Patroni directives.
 3. **Student Verification & Ownership:**
    - Every SQL DDL schema, table relationship, constraint, and query was personally reviewed, tested, and validated for technical correctness.
-   - All execution plans and indexing strategies were verified against standard PostgreSQL query planner behavior.
+   - All execution plans, indexing strategies, NoSQL aggregation pipelines, and distributed sharding configurations were verified against standard database engine behavior.
    - I am fully prepared to defend and explain all architectural choices, normalisation steps, and optimisation decisions during technical verification.

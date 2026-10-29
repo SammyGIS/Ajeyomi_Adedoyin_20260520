@@ -65,6 +65,8 @@ FOR UPDATE;
 3. Passenger A confirms the seat is free, inserts the booking, and runs `COMMIT`.
 4. As soon as Passenger A commits, Passenger B unblocks, re-checks the seat, sees that Seat 4 is now marked as `Confirmed`, and is safely redirected to choose another seat.
 
+![Pessimistic Row-Level Locking Workflow](assets/Ajeyomi_Adedoyin_20260520_Concurrency_Locking_Workflow.png)
+
 ---
 
 ## 5. PostgreSQL Transaction Isolation Levels
@@ -148,10 +150,14 @@ You do not need to use the terminal. Concurrency tests simulate two users acting
 
 ---
 
-## 8. Visual Verification Evidence (Screenshots in `assets/`)
+## 8. Concurrency Locking Architecture & Verification Evidence
 
-| Test Scenario | pgAdmin 4 Verification Screenshot |
-| :--- | :--- |
-| **ACID Commit & Rollback** | ![ACID Commit & Rollback in pgAdmin](assets/acid_commit_rollback.png) |
-| **Row Locking (`SELECT FOR UPDATE`)** | ![Row Locking Wait State in pgAdmin](assets/concurrency_row_locking.png) |
-| **Deadlock Detection Alert** | ![Deadlock Detected Error in pgAdmin](assets/deadlock_detected.png) |
+The diagram below illustrates the exact locking sequence and race condition prevention mechanism:
+
+![Pessimistic Concurrency Locking Workflow](assets/Ajeyomi_Adedoyin_20260520_Concurrency_Locking_Workflow.png)
+
+### Key Concurrency Takeaways:
+1. **Race Condition Prevention:** By issuing `SELECT ... FOR UPDATE` before confirming seats, Session B is forced to wait until Session A commits, completely eliminating duplicate ticket sales.
+2. **Deterministic Isolation:** PostgreSQL's transaction manager prevents dirty reads and ensures snapshot stability across concurrent queries.
+3. **Automated Deadlock Resolution:** Circular lock dependencies are proactively aborted within 1,000 ms, releasing contested rows so other operational sessions continue without human intervention.
+4. **Complete Terminal Transcript:** For the full verbatim console output of all 5 tested concurrency scenarios, refer to [`Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt`](Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt).

@@ -43,7 +43,7 @@ The company uses a management dashboard to run daily work. Because of safety and
 To keep the database clean and easy to understand without making it overly complicated, we designed **8 tables**.
 
 ### 2.1 Entity Relationship Diagram
-![Adedoyin Mobility & Logistics ERD](Ajeyomi_Adedoyin_20260520_ERD.png)
+![Adedoyin Mobility & Logistics ERD](assets/Ajeyomi_Adedoyin_20260520_ERD.png)
 
 ### 2.2 Table Relationships
 The diagram above shows how the 8 tables connect:
@@ -147,10 +147,13 @@ You do not need to use the command line terminal. You can run all scripts direct
 
 ---
 
-## 7. Visual Verification Evidence (Screenshots in `assets/`)
+## 7. Visual Verification Evidence
 
-| Deliverable | Visual Evidence / Screenshot |
-| :--- | :--- |
-| **Entity Relationship Diagram (ERD)** | ![Entity Relationship Diagram](Ajeyomi_Adedoyin_20260520_ERD.png) |
-| **pgAdmin 4 Schema Tables View** | ![pgAdmin Schema Tables](assets/pgadmin_schema_tables.png) |
-| **pgAdmin 4 Seed Data Verification** | ![pgAdmin Seed Data Rows](assets/pgadmin_seed_data.png) |
+The primary architectural deliverable for Portfolio 1 is the complete Entity Relationship Diagram (ERD):
+
+![Entity Relationship Diagram](assets/Ajeyomi_Adedoyin_20260520_ERD.png)
+
+### Deliverables Summary:
+- **Executable DDL:** [`Ajeyomi_Adedoyin_20260520_Schema.sql`](Ajeyomi_Adedoyin_20260520_Schema.sql) contains all table schemas, primary keys, foreign keys, and integrity constraints.
+- **Seed Data:** [`Ajeyomi_Adedoyin_20260520_Seed_Data.sql`](Ajeyomi_Adedoyin_20260520_Seed_Data.sql) and [`Ajeyomi_Adedoyin_20260520_Copy_From_CSV.sql`](Ajeyomi_Adedoyin_20260520_Copy_From_CSV.sql) provide ready-to-run data population.
+- **Central Datasets:** All raw CSV files and the compiled Excel workbook are available in [`../data/`](../data/).
