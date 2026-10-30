@@ -96,6 +96,8 @@ Execution Time: 0.072 ms
 
 **Technical Finding:** Only the `trips_southwest` table was opened. Partitions for Abuja, Kano, and Enugu were never touched, reducing disk I/O from 12 buffer hits down to 2 buffer hits.
 
+![Partition Pruning Performance Benchmark](assets/Ajeyomi_Adedoyin_20260520_Partition_Pruning_Benchmark.png)
+
 ### 2.3 Distributed Multi-Node Sharding with `postgres_fdw`
 
 When data volume exceeds the storage capacity of a single physical server, individual partition tables are detached and hosted on remote worker nodes using the **PostgreSQL Foreign Data Wrapper (`postgres_fdw`)**:
