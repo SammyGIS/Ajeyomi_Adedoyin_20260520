@@ -86,7 +86,8 @@ Ajeyomi_Adedoyin_20260520/
 │
 ├── portfolio-5-distributed-cloud/
 │   ├── assets/
-│   │   └── Ajeyomi_Adedoyin_20260520_Distributed_Cluster_Topology.png # Multi-region cloud topology diagram
+│   │   ├── Ajeyomi_Adedoyin_20260520_Distributed_Cluster_Topology.png # Multi-region cloud topology diagram
+│   │   └── Ajeyomi_Adedoyin_20260520_Partition_Pruning_Benchmark.png  # Partition pruning benchmark chart
 │   ├── Ajeyomi_Adedoyin_20260520_README.md       # Distributed sharding, replication, and failover report
 │   ├── Ajeyomi_Adedoyin_20260520_Sharding_and_Replication.sql # Declarative partitioning, FDW, and replication DDL
 │   └── Ajeyomi_Adedoyin_20260520_Replication_Failover_Simulation.txt # Patroni HA failover logs and pruning output
