@@ -63,7 +63,7 @@ This command provides four crucial pieces of technical evidence:
 4. **Shared Buffers (`shared hit`):** The number of 8KB database memory pages read from cache or disk. Fewer page reads indicate a more efficient query.
 
 ### The Problem: Sequential Scans (`Seq Scan`)
-Without appropriate indexes, the database must perform a **Sequential Scan**, reading every single row in the table from disk/memory and checking each row against the `WHERE` condition. On large tables like `bookings` (5,000+ rows) and `parcels` (1,200+ rows), this wastes CPU cycles and memory bandwidth.
+Without appropriate indexes, the database must perform a **Sequential Scan**, reading every single row in the table from disk/memory and checking each row against the `WHERE` condition. On large tables like `bookings` (8,000 rows) and `parcels` (3,500 rows), this wastes CPU cycles and memory bandwidth.
 
 ---
 

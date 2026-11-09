@@ -128,7 +128,7 @@ Ajeyomi_Adedoyin_20260520/
   - Guaranteed no double-seat booking via a unique constraint on `(trip_id, seat_number)`.
   - Enforced regulatory KYC (11-digit NIN checks, driver's license numbers, passenger emergency contacts).
   - Validated vehicle seating capacities (7 to 18 seats) and chronological travel dates (`arrival_datetime > departure_datetime`).
-- **Data Population:** Built a realistic synthetic data generator in Python producing over 5,000 bookings and 1,200 parcel waybill records.
+- **Data Population:** Built a realistic synthetic data generator in Python producing 8,000 bookings, 3,500 parcel waybill records and 1,200 trips.
 
 ### 5.2 Portfolio 2: Query Processing & Optimisation
 - **Core Business Queries:** Implemented four operational SQL queries:
@@ -175,11 +175,11 @@ Ajeyomi_Adedoyin_20260520/
 ### 6.1 Relational Database Modules (Portfolios 1, 2, 3, 5) in pgAdmin 4
 1. Open **pgAdmin 4** and connect to your local PostgreSQL server.
 2. Create database `adedoyin_mobility`.
-3. Execute `portfolio-1-database-design/Ajeyomi_Adedoyin_Schema.sql` to generate all 8 tables and constraints.
-4. Execute `portfolio-1-database-design/Ajeyomi_Adedoyin_Seed_Data.sql` to populate 5,000+ bookings and trips.
-5. Execute `portfolio-2-query-optimisation/Ajeyomi_Adedoyin_Queries.sql` to test query execution plans (`EXPLAIN ANALYZE`).
-6. Test concurrency in dual tabs using instructions in `portfolio-3-transactions-concurrency/Ajeyomi_Adedoyin_README.md`.
-7. Execute `portfolio-5-distributed-cloud/Ajeyomi_Adedoyin_Sharding_and_Replication.sql` to test partition pruning and replication configurations.
+3. Execute `portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Schema.sql` to generate all 8 tables and constraints.
+4. Load the data using **one** of the two options (not both, as they populate the same tables): `portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Seed_Data.sql` (plain SQL `INSERT` sample records, runs directly in pgAdmin 4), or `portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Copy_From_CSV.sql` (full dataset of 8,000 bookings, 3,500 parcels and 1,200 trips from `data/`, uses psql `\copy`, so run it from `psql` in the repository root).
+5. Execute `portfolio-2-query-optimisation/Ajeyomi_Adedoyin_20260520_Queries.sql` to test query execution plans (`EXPLAIN ANALYZE`).
+6. Test concurrency in dual tabs using instructions in `portfolio-3-transactions-concurrency/Ajeyomi_Adedoyin_20260520_README.md`.
+7. Execute `portfolio-5-distributed-cloud/Ajeyomi_Adedoyin_20260520_Sharding_and_Replication.sql` to test partition pruning and replication configurations.
 
 ### 6.2 NoSQL Module (Portfolio 4) in MongoDB Compass / mongosh
 1. Start MongoDB: `mongod --dbpath /path/to/data`.
