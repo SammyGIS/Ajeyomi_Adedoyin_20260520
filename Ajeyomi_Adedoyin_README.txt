@@ -18,7 +18,7 @@ What it stores: stations, vehicles, drivers, customers, routes, trips, seat book
 
 What it must do: book a seat without ever selling it twice, track parcels, report revenue per route, report on driver work, and keep working when a server fails.
 
-The real data is 6 stations, 20 vehicles, 20 drivers, 500 customers, 10 routes, 1,200 trips, 8,000 bookings and 3,500 parcels. I made it with a Python script and the Faker library in the data folder. I used the same company in all five portfolios.
+The data is 6 stations, 20 vehicles, 20 drivers, 500 customers, 10 routes, 1,200 trips, 8,000 bookings and 3,500 parcels. I made it with a Python script and the Faker library in the data folder. I used the same company in all five portfolios.
 
 
 2. PORTFOLIO 1: DATABASE DESIGN
@@ -104,7 +104,6 @@ What I learned: indexes and partitions make queries read much less data. A lock 
 8. AI USE DECLARATION
 
 I used AI assistants (the Gemini chat app, and Claude) to help with ideas and planning, preparing the data, and writing, correcting and debugging code and errors.
-
 I set up the software on my own computer, ran the scripts and tests, took the screenshots and checked the results, and I can explain all the work in this portfolio.
 
 
