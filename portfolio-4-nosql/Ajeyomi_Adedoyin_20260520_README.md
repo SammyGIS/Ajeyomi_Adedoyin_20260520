@@ -112,7 +112,21 @@ In real use I would set the expiry to a longer time, for example 30 days.
 - Validation rules keep a flexible database tidy.
 - A document database is not a replacement for PostgreSQL here. Seats and money stay in PostgreSQL where they have strict rules.
 
-## 9. How to run it again
+## 9. Screenshots from MongoDB Compass
+
+The parcel_tracking collection: 3,500 documents and 4 indexes (the default one plus my three).
+
+![parcel_tracking collection in Compass](assets/Ajeyomi_Adedoyin_20260520_Compass_Parcel_Tracking_Collection.png)
+
+One parcel found by its waybill number. The checkpoints are stored inside the parcel document, so one read gives the whole history.
+
+![Parcel found by waybill number](assets/Ajeyomi_Adedoyin_20260520_Compass_Parcel_Waybill_Document.png)
+
+The vehicle_telemetry collection (23,802 pings). One vehicle's pings for one week return 88 documents, the same number as in the results file.
+
+![Weekly query on vehicle_telemetry](assets/Ajeyomi_Adedoyin_20260520_Compass_Telemetry_Weekly_Query.png)
+
+## 10. How to run it again
 
 1. Install MongoDB and mongosh, and make sure MongoDB is running on the normal port 27017.
 2. Open PowerShell in the repository folder and run:
@@ -123,7 +137,7 @@ In real use I would set the expiry to a longer time, for example 30 days.
 3. To make the data files again, run `python data\Ajeyomi_Adedoyin_20260520_NoSQL_Data_Generator.py`.
 4. To look at the collections, open MongoDB Compass, connect to `mongodb://localhost:27017` and open the database `adedoyin_mobility_nosql`.
 
-## 10. Files
+## 11. Files
 
 - `Ajeyomi_Adedoyin_20260520_MongoDB_Queries.js`: the script (collections, loading, benchmarks, indexes, queries, TTL test).
 - `Ajeyomi_Adedoyin_20260520_NoSQL_Execution_Results.txt`: the real output.
