@@ -108,7 +108,7 @@ CREATE TABLE trips (
     created_at              TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT chk_trip_datetimes CHECK (arrival_datetime IS NULL OR arrival_datetime > departure_datetime),
-    CONSTRAINT chk_trip_status    CHECK (trip_status IN ('Scheduled', 'Boarding', 'In-Transit', 'Arrived', 'Cancelled'))
+    CONSTRAINT chk_trip_status    CHECK (trip_status IN ('Scheduled', 'Boarding', 'In-Transit', 'Arrived', 'Completed', 'Cancelled'))
 );
 
 -- ------------------------------------------------------------------------------
