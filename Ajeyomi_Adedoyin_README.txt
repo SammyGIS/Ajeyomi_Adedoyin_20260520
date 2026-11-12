@@ -89,8 +89,6 @@ The cloud design (servers in Lagos, Abuja and Kano, Patroni and etcd for automat
 
 7. MY REFLECTION
 
-My biggest lesson is that results must come from real runs. My first draft had numbers that did not match my own data, so I ran everything again on my own PostgreSQL and MongoDB and used the real output. Some results were smaller than I expected, but I can explain every number.
-
 Design choices: I kept money and seats in PostgreSQL because they need strict rules, and I put GPS pings and parcel history in MongoDB because they change shape and arrive all the time. I split trips by region because most work is for one region at a time.
 
 Challenges:
