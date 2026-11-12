@@ -1,4 +1,4 @@
--- Clean up existing tables in reverse dependency order
+-- Drop existing tables
 DROP TABLE IF EXISTS parcels CASCADE;
 DROP TABLE IF EXISTS bookings CASCADE;
 DROP TABLE IF EXISTS trips CASCADE;
@@ -8,9 +8,7 @@ DROP TABLE IF EXISTS drivers CASCADE;
 DROP TABLE IF EXISTS vehicles CASCADE;
 DROP TABLE IF EXISTS stations CASCADE;
 
--- ------------------------------------------------------------------------------
--- STATIONS: 6 Regional Hubs across Nigeria
--- ------------------------------------------------------------------------------
+-- Stations
 CREATE TABLE stations (
     station_id          SERIAL PRIMARY KEY,
     station_name        VARCHAR(100) NOT NULL UNIQUE,
@@ -21,9 +19,7 @@ CREATE TABLE stations (
     created_at          TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- ------------------------------------------------------------------------------
--- VEHICLES: Fleet of 20 Commercial Interstate Assets
--- ------------------------------------------------------------------------------
+-- Vehicles
 CREATE TABLE vehicles (
     vehicle_id              SERIAL PRIMARY KEY,
     registration_number     VARCHAR(20)  NOT NULL UNIQUE,  -- Plate number
@@ -40,9 +36,7 @@ CREATE TABLE vehicles (
     CONSTRAINT chk_vehicle_status   CHECK (status IN ('Active', 'In-Transit', 'Under-Maintenance', 'Decommissioned'))
 );
 
--- ------------------------------------------------------------------------------
--- DRIVERS: Driver Bio-Data and Regulatory KYC
--- ------------------------------------------------------------------------------
+-- Drivers
 CREATE TABLE drivers (
     driver_id           SERIAL PRIMARY KEY,
     full_name           VARCHAR(120) NOT NULL,
@@ -58,9 +52,7 @@ CREATE TABLE drivers (
     CONSTRAINT chk_driver_status CHECK (status IN ('Available', 'On-Trip', 'On-Leave', 'Suspended'))
 );
 
--- ------------------------------------------------------------------------------
--- CUSTOMERS: Passengers and Parcel Senders with KYC
--- ------------------------------------------------------------------------------
+-- Customers
 CREATE TABLE customers (
     customer_id             SERIAL PRIMARY KEY,
     full_name               VARCHAR(120) NOT NULL,
@@ -74,9 +66,7 @@ CREATE TABLE customers (
     CONSTRAINT chk_customer_nin CHECK (nin IS NULL OR nin ~ '^[0-9]{11}$')
 );
 
--- ------------------------------------------------------------------------------
--- ROUTES: Interstate Corridors connecting Regional Stations
--- ------------------------------------------------------------------------------
+-- Routes
 CREATE TABLE routes (
     route_id                SERIAL PRIMARY KEY,
     origin_station_id       INT            NOT NULL REFERENCES stations(station_id) ON DELETE RESTRICT,
@@ -94,9 +84,7 @@ CREATE TABLE routes (
     )
 );
 
--- ------------------------------------------------------------------------------
--- TRIPS: Scheduled and Executed Interstate Journeys
--- ------------------------------------------------------------------------------
+-- Trips
 CREATE TABLE trips (
     trip_id                 SERIAL PRIMARY KEY,
     route_id                INT         NOT NULL REFERENCES routes(route_id) ON DELETE RESTRICT,
@@ -111,9 +99,7 @@ CREATE TABLE trips (
     CONSTRAINT chk_trip_status    CHECK (trip_status IN ('Scheduled', 'Boarding', 'In-Transit', 'Arrived', 'Completed', 'Cancelled'))
 );
 
--- ------------------------------------------------------------------------------
--- BOOKINGS: Seat Reservations & Manifest (Anti-Double Booking)
--- ------------------------------------------------------------------------------
+-- Bookings
 CREATE TABLE bookings (
     booking_id          SERIAL PRIMARY KEY,
     trip_id             INT            NOT NULL REFERENCES trips(trip_id) ON DELETE CASCADE,
@@ -129,9 +115,7 @@ CREATE TABLE bookings (
     CONSTRAINT chk_booking_status  CHECK (booking_status IN ('Confirmed', 'Checked-In', 'Completed', 'Cancelled', 'Refunded'))
 );
 
--- ------------------------------------------------------------------------------
--- PARCELS: Waybill Logistics Cargo Tracking
--- ------------------------------------------------------------------------------
+-- Parcels
 CREATE TABLE parcels (
     parcel_id           SERIAL PRIMARY KEY,
     trip_id             INT            REFERENCES trips(trip_id) ON DELETE SET NULL,
@@ -152,9 +136,7 @@ CREATE TABLE parcels (
     )
 );
 
--- ------------------------------------------------------------------------------
--- Performance Indexes for Operational Queries and Dashboard Lookups
--- ------------------------------------------------------------------------------
+-- Indexes
 CREATE INDEX idx_trips_route_date       ON trips(route_id, departure_datetime);
 CREATE INDEX idx_trips_status           ON trips(trip_status);
 CREATE INDEX idx_bookings_trip          ON bookings(trip_id);

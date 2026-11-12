@@ -1,11 +1,4 @@
--- Run this ONLY in the separate database adedoyin_mobility_bench, after loading
--- the Portfolio 1 schema and CSV data into it. It is not for adedoyin_mobility.
---
--- Why: with about 1,200 trips and 8,000 bookings every table fits in a few
--- memory pages, so PostgreSQL always chooses a sequential scan and indexes show
--- no benefit. This script copies the real records 49 more times (50 copies in
--- total) so index effects can be measured honestly. Each copy has new primary
--- keys, new unique references and trip dates shifted by 120 days.
+-- Run only in adedoyin_mobility_bench. Copies the real records 50 times (new keys, shifted trip dates) so indexes can be measured.
 
 BEGIN;
 

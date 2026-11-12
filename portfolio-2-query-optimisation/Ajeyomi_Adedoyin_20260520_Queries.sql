@@ -1,10 +1,4 @@
--- Run in the benchmark database adedoyin_mobility_bench after the scale-up script.
--- From a terminal in the repository root (change the port if yours differs):
---   psql -U postgres -p 5433 -d adedoyin_mobility_bench -f portfolio-2-query-optimisation/Ajeyomi_Adedoyin_20260520_Queries.sql -o portfolio-2-query-optimisation/Ajeyomi_Adedoyin_20260520_Query_Execution_Plans.txt
---
--- The script removes the extra indexes created in Portfolio 1 (the baseline), records
--- EXPLAIN (ANALYZE, BUFFERS) for each query, creates the optimisation indexes, and
--- records the plans again. Primary key and unique constraint indexes always remain.
+-- Run in adedoyin_mobility_bench after the scale-up script. The baseline drops the extra Portfolio 1 indexes first.
 
 SET max_parallel_workers_per_gather = 0;
 SET jit = off;
@@ -36,7 +30,6 @@ UNION ALL SELECT 'parcels',  COUNT(*) FROM parcels;
 \qecho ================================================================================
 \qecho
 \qecho QUERY 1: Route Revenue and Seat Booking Analysis
--- Management report: ticket revenue per travel corridor for completed trips in July 2026.
 SELECT
     r.route_id,
     s_orig.station_name AS origin_station,
@@ -57,7 +50,6 @@ GROUP BY r.route_id, s_orig.station_name, s_dest.station_name
 ORDER BY total_revenue_ngn DESC;
 \qecho
 \qecho QUERY 2: Weekly Trip and Vehicle Dispatch Register
--- Dispatch officers check the trips, vehicles and drivers on one route for one week.
 SELECT
     t.trip_id,
     t.departure_datetime,
@@ -80,7 +72,6 @@ WHERE t.route_id = 1
 ORDER BY t.departure_datetime;
 \qecho
 \qecho QUERY 3: Customer Parcel Tracking by Sender Phone Number
--- Customer care desk looks up every parcel sent by one customer.
 SELECT
     p.waybill_number,
     p.delivery_status,
@@ -98,7 +89,6 @@ ORDER BY p.created_at DESC
 LIMIT 10;
 \qecho
 \qecho QUERY 4: Driver Performance and Trip Workload for August 2026
--- Supervisor report: completed trips and confirmed passengers per driver.
 SELECT
     d.driver_id,
     d.full_name AS driver_name,
@@ -120,7 +110,6 @@ ORDER BY completed_trips_count DESC, total_passengers_carried DESC;
 \qecho ================================================================================
 \qecho
 \qecho [BASELINE] QUERY 1: Route Revenue and Seat Booking Analysis
--- warm-up run so the recorded plan reflects cached data
 SELECT COUNT(*) AS warm_up_rows FROM (
 SELECT
     r.route_id,
@@ -162,7 +151,6 @@ GROUP BY r.route_id, s_orig.station_name, s_dest.station_name
 ORDER BY total_revenue_ngn DESC;
 \qecho
 \qecho [BASELINE] QUERY 2: Weekly Trip and Vehicle Dispatch Register
--- warm-up run so the recorded plan reflects cached data
 SELECT COUNT(*) AS warm_up_rows FROM (
 SELECT
     t.trip_id,
@@ -208,7 +196,6 @@ WHERE t.route_id = 1
 ORDER BY t.departure_datetime;
 \qecho
 \qecho [BASELINE] QUERY 3: Customer Parcel Tracking by Sender Phone Number
--- warm-up run so the recorded plan reflects cached data
 SELECT COUNT(*) AS warm_up_rows FROM (
 SELECT
     p.waybill_number,
@@ -242,7 +229,6 @@ WHERE c.phone_number = '08171070189'
 ORDER BY p.created_at DESC;
 \qecho
 \qecho [BASELINE] QUERY 4: Driver Performance and Trip Workload for August 2026
--- warm-up run so the recorded plan reflects cached data
 SELECT COUNT(*) AS warm_up_rows FROM (
 SELECT
     d.driver_id,
@@ -280,19 +266,15 @@ ORDER BY completed_trips_count DESC, total_passengers_carried DESC;
 \qecho ================================================================================
 \qecho CREATING OPTIMISATION INDEXES
 \qecho ================================================================================
--- Queries 1 and 4: filter completed trips by date range without scanning every trip.
 CREATE INDEX idx_opt_trips_status_departure
     ON trips (trip_status, departure_datetime) INCLUDE (route_id, driver_id);
 
--- Query 2: find one route's trips inside a date range.
 CREATE INDEX idx_opt_trips_route_departure
     ON trips (route_id, departure_datetime);
 
--- Queries 1 and 4: covering index so booking amounts are read from the index alone.
 CREATE INDEX idx_opt_bookings_trip_status
     ON bookings (trip_id, booking_status) INCLUDE (ticket_amount);
 
--- Query 3: find one sender's parcels, newest first, without scanning every parcel.
 CREATE INDEX idx_opt_parcels_sender
     ON parcels (sender_customer_id, created_at DESC);
 
@@ -303,7 +285,6 @@ ANALYZE;
 \qecho ================================================================================
 \qecho
 \qecho [OPTIMISED] QUERY 1: Route Revenue and Seat Booking Analysis
--- warm-up run so the recorded plan reflects cached data
 SELECT COUNT(*) AS warm_up_rows FROM (
 SELECT
     r.route_id,
@@ -345,7 +326,6 @@ GROUP BY r.route_id, s_orig.station_name, s_dest.station_name
 ORDER BY total_revenue_ngn DESC;
 \qecho
 \qecho [OPTIMISED] QUERY 2: Weekly Trip and Vehicle Dispatch Register
--- warm-up run so the recorded plan reflects cached data
 SELECT COUNT(*) AS warm_up_rows FROM (
 SELECT
     t.trip_id,
@@ -391,7 +371,6 @@ WHERE t.route_id = 1
 ORDER BY t.departure_datetime;
 \qecho
 \qecho [OPTIMISED] QUERY 3: Customer Parcel Tracking by Sender Phone Number
--- warm-up run so the recorded plan reflects cached data
 SELECT COUNT(*) AS warm_up_rows FROM (
 SELECT
     p.waybill_number,
@@ -425,7 +404,6 @@ WHERE c.phone_number = '08171070189'
 ORDER BY p.created_at DESC;
 \qecho
 \qecho [OPTIMISED] QUERY 4: Driver Performance and Trip Workload for August 2026
--- warm-up run so the recorded plan reflects cached data
 SELECT COUNT(*) AS warm_up_rows FROM (
 SELECT
     d.driver_id,

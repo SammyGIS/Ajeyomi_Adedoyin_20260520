@@ -1,6 +1,3 @@
--- -----------------------------------------------------------------------------
--- Populating table: stations
--- -----------------------------------------------------------------------------
 INSERT INTO stations (station_id, station_name, state, address, contact_phone, manager_name) VALUES
   (1, 'Lagos Ojota Terminal', 'Lagos', '12 Ikorodu Road, Ojota, Lagos', '08021110001', 'Babatunde Adeleke'),
   (2, 'Ibadan Iwo Road Terminal', 'Oyo', '45 Iwo Road Interchange, Ibadan', '08021110002', 'Folashade Alao'),
@@ -9,9 +6,6 @@ INSERT INTO stations (station_id, station_name, state, address, contact_phone, m
   (5, 'Enugu Holy Ghost Terminal', 'Enugu', '3 Ogui Road, Holy Ghost, Enugu', '08021110005', 'Chinedu Okoye'),
   (6, 'Kano Sabon Gari Terminal', 'Kano', '52 France Road, Sabon Gari, Kano', '08021110006', 'Ibrahim Danladi');
 
--- -----------------------------------------------------------------------------
--- Populating table: vehicles
--- -----------------------------------------------------------------------------
 INSERT INTO vehicles (vehicle_id, registration_number, chassis_number, make_model, seating_capacity, current_station_id, roadworthiness_expiry, gps_tracker_id, status) VALUES
   (1, 'APP-125KT', '2T1BR32E362950628', 'Toyota HiAce Bus', 14, 2, '2027-01-21', 'GPS-AML-001', 'Active'),
   (2, 'APP-704LG', '2T1BR32E134126396', 'Toyota HiAce Bus', 14, 1, '2027-03-21', 'GPS-AML-002', 'Active'),
@@ -34,9 +28,6 @@ INSERT INTO vehicles (vehicle_id, registration_number, chassis_number, make_mode
   (19, 'IBD-710AA', '2T1BR32E513140753', 'Toyota Sienna Minivan', 8, 5, '2027-07-27', 'GPS-AML-019', 'Under-Maintenance'),
   (20, 'ENU-666AA', '2T1BR32E830448745', 'Toyota Sienna Minivan', 7, 6, '2027-08-31', 'GPS-AML-020', 'Under-Maintenance');
 
--- -----------------------------------------------------------------------------
--- Populating table: drivers
--- -----------------------------------------------------------------------------
 INSERT INTO drivers (driver_id, full_name, phone_number, nin, license_number, license_expiry, assigned_vehicle_id, status) VALUES
   (1, 'Kehinde Ogunleye', '08076707197', '49133818601', 'FRSC-0001-KN', '2027-06-09', 1, 'Available'),
   (2, 'Emeka Okafor', '08081054447', '79486780724', 'FRSC-0002-LA', '2027-10-31', 2, 'Available'),
@@ -59,9 +50,6 @@ INSERT INTO drivers (driver_id, full_name, phone_number, nin, license_number, li
   (19, 'Chukwuma Gbadamosi', '08032564689', '43709891493', 'FRSC-0019-ABJ', '2028-02-19', 19, 'On-Leave'),
   (20, 'Bashir Yakubu', '08089075854', '31726673616', 'FRSC-0020-KN', '2027-01-01', 20, 'On-Leave');
 
--- -----------------------------------------------------------------------------
--- Populating table: customers
--- -----------------------------------------------------------------------------
 INSERT INTO customers (customer_id, full_name, phone_number, email, nin, emergency_contact_name, emergency_contact_phone) VALUES
   (1, 'Victor Bakare', '08171070189', 'victor.bakare1@gmail.com', '67059710962', 'David Bakare', '07098834863'),
   (2, 'Haruna Nnamani', '08135487660', 'haruna.nnamani2@gmail.com', '37044154194', 'Emeka Nnamani', '07087736262'),
@@ -564,9 +552,6 @@ INSERT INTO customers (customer_id, full_name, phone_number, email, nin, emergen
   (499, 'Ifeanyi Lawal', '08128314232', 'ifeanyi.lawal499@gmail.com', '35666126154', 'Femi Lawal', '07095800828'),
   (500, 'Haruna Lawal', '08133381086', 'haruna.lawal500@gmail.com', '41597325129', 'Chukwuma Lawal', '07033535297');
 
--- -----------------------------------------------------------------------------
--- Populating table: routes
--- -----------------------------------------------------------------------------
 INSERT INTO routes (route_id, origin_station_id, destination_station_id, distance_km, est_travel_hours, base_passenger_fare, base_parcel_rate) VALUES
   (1, 1, 2, 130.0, 2.5, 3500.0, 1500.0),
   (2, 2, 1, 130.0, 2.5, 3500.0, 1500.0),
@@ -579,9 +564,6 @@ INSERT INTO routes (route_id, origin_station_id, destination_station_id, distanc
   (9, 3, 6, 440.0, 6.0, 11000.0, 3000.0),
   (10, 6, 3, 440.0, 6.0, 11000.0, 3000.0);
 
--- -----------------------------------------------------------------------------
--- Populating table: trips
--- -----------------------------------------------------------------------------
 INSERT INTO trips (trip_id, route_id, vehicle_id, driver_id, departure_datetime, arrival_datetime, trip_status) VALUES
   (1, 7, 10, 10, '2026-06-01 13:00:00', '2026-06-01 18:08:50', 'Cancelled'),
   (2, 10, 2, 6, '2026-06-01 20:15:00', '2026-06-02 03:38:50', 'Completed'),
@@ -1788,9 +1770,6 @@ INSERT INTO trips (trip_id, route_id, vehicle_id, driver_id, departure_datetime,
   (1199, 2, 15, 14, '2026-09-28 18:00:00', '2026-09-28 20:44:10', 'Cancelled'),
   (1200, 2, 19, 13, '2026-09-29 12:30:00', '2026-09-29 15:35:36', 'Cancelled');
 
--- -----------------------------------------------------------------------------
--- Populating table: bookings
--- -----------------------------------------------------------------------------
 INSERT INTO bookings (booking_id, trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference, booking_timestamp) VALUES
   (1, 1, 465, 1, 6500.0, 'Cancelled', 'PAY-AML-000001-463', '2026-05-30 05:00:00'),
   (2, 1, 452, 2, 6500.0, 'Cancelled', 'PAY-AML-000002-840', '2026-05-28 08:00:00'),
@@ -9823,9 +9802,6 @@ INSERT INTO bookings (booking_id, trip_id, customer_id, seat_number, ticket_amou
   (7999, 931, 98, 6, 18500.0, 'Confirmed', 'PAY-AML-007999-490', '2026-08-31 10:30:00'),
   (8000, 931, 398, 7, 18500.0, 'Confirmed', 'PAY-AML-008000-954', '2026-08-29 04:30:00');
 
--- -----------------------------------------------------------------------------
--- Populating table: parcels
--- -----------------------------------------------------------------------------
 INSERT INTO parcels (parcel_id, trip_id, sender_customer_id, recipient_name, recipient_phone, recipient_nin, waybill_number, weight_kg, declared_value, delivery_status) VALUES
   (1, 1, 219, 'Jamiu Ogunleye', '08074170039', '44530384262', 'AML-WB-2026-00001', 9.36, 35000, 'Returned'),
   (2, 1, 181, 'Chidi Eze', '08020613030', '93842333180', 'AML-WB-2026-00002', 27.69, 250000, 'Returned'),
@@ -13340,7 +13316,7 @@ INSERT INTO parcels (parcel_id, trip_id, sender_customer_id, recipient_name, rec
   (3499, 1163, 453, 'Chukwuma Gbadamosi', '08098551484', '12561994482', 'AML-WB-2026-03499', 31.42, 150000, 'Delivered'),
   (3500, 1164, 388, 'Ifeanyi Salami', '08025170229', '82705375185', 'AML-WB-2026-03500', 21.93, 15000, 'Arrived-Hub');
 
--- Reset auto-increment serial sequences for PostgreSQL
+-- Reset sequences
 SELECT setval('stations_station_id_seq', (SELECT COALESCE(MAX(station_id), 1) FROM stations));
 SELECT setval('vehicles_vehicle_id_seq', (SELECT COALESCE(MAX(vehicle_id), 1) FROM vehicles));
 SELECT setval('drivers_driver_id_seq', (SELECT COALESCE(MAX(driver_id), 1) FROM drivers));

@@ -18,9 +18,7 @@
  * ============================================================================
  */
 
-// ----------------------------------------------------------------------------
-// INITIALISE DATABASE AND SCHEMA VALIDATION
-// ----------------------------------------------------------------------------
+// Database and schema validation
 
 use adedoyin_mobility_nosql;
 
@@ -145,9 +143,7 @@ db.createCollection("parcel_tracking", {
   }
 });
 
-// ----------------------------------------------------------------------------
-// INSERT SEED DATA
-// ----------------------------------------------------------------------------
+// Insert seed data
 
 db.vehicle_telemetry.insertMany([
   {
@@ -550,55 +546,51 @@ db.parcel_tracking.insertMany([
   }
 ]);
 
-// ----------------------------------------------------------------------------
-// CREATE SPECIALISED INDEXES
-// ----------------------------------------------------------------------------
+// Create specialised indexes
 
-// Index 1: 2dsphere index for spherical geospatial proximity queries
+// 2dsphere index for spherical geospatial proximity queries
 db.vehicle_telemetry.createIndex(
   { location: "2dsphere" },
   { name: "idx_telemetry_2dsphere_location" }
 );
 
-// Index 2: Compound index for vehicle time-series chronology
+// Compound index for vehicle time-series chronology
 db.vehicle_telemetry.createIndex(
   { vehicle_id: 1, recorded_at: -1 },
   { name: "idx_telemetry_vehicle_timestamp" }
 );
 
-// Index 3: Compound index for corridor and safety alerts
+// Compound index for corridor and safety alerts
 db.vehicle_telemetry.createIndex(
   { route_corridor: 1, "alerts.speed_warning": 1 },
   { name: "idx_telemetry_corridor_speed_alert" }
 );
 
-// Index 4: TTL (Time-To-Live) index for automated retention management (30 days)
+// TTL (Time-To-Live) index for automated retention management (30 days)
 db.vehicle_telemetry.createIndex(
   { recorded_at: 1 },
   { expireAfterSeconds: 2592000, name: "idx_telemetry_ttl_30d" }
 );
 
-// Index 5: Unique B-tree index on Waybill Number for fast package lookups
+// Unique B-tree index on Waybill Number for fast package lookups
 db.parcel_tracking.createIndex(
   { waybill_number: 1 },
   { unique: true, name: "idx_parcel_waybill_unique" }
 );
 
-// Index 6: Multikey index for package status and handling station tracking
+// Multikey index for package status and handling station tracking
 db.parcel_tracking.createIndex(
   { "checkpoints.status": 1, "checkpoints.station": 1 },
   { name: "idx_parcel_checkpoints_multikey" }
 );
 
-// Index 7: Compound index on route origin, destination, and current status
+// Compound index on route origin, destination, and current status
 db.parcel_tracking.createIndex(
   { "route.origin_hub": 1, "route.destination_hub": 1, current_status: 1 },
   { name: "idx_parcel_route_status" }
 );
 
-// ----------------------------------------------------------------------------
-// FIVE OPERATIONAL NOSQL QUERIES & AGGREGATION PIPELINES
-// ----------------------------------------------------------------------------
+// Operational queries and aggregation pipelines
 
 print("\n================================================================================");
 print("QUERY 1: GEOSPATIAL PROXIMITY DISPATCH QUERY ($nearSphere)");
@@ -677,10 +669,10 @@ print("Business Objective: Compute parcel scanning throughput grouped by hub and
 print("================================================================================");
 
 const hubMilestonesPipeline = [
-  // Stage 1: Deconstruct checkpoints array into individual milestone documents
+  // Deconstruct checkpoints array into individual milestone documents
   { $unwind: "$checkpoints" },
   
-  // Stage 2: Group by station name and handling milestone status
+  // Group by station name and handling milestone status
   {
     $group: {
       _id: {
@@ -692,7 +684,7 @@ const hubMilestonesPipeline = [
     }
   },
   
-  // Stage 3: Shape clean presentation projection
+  // Shape clean presentation projection
   {
     $project: {
       _id: 0,
@@ -703,7 +695,7 @@ const hubMilestonesPipeline = [
     }
   },
   
-  // Stage 4: Order by busiest hub
+  // Order by busiest hub
   { $sort: { packages_processed: -1, station_name: 1 } }
 ];
 
@@ -717,7 +709,7 @@ print("Business Objective: Calculate average speed, fuel drawdown, and alert cou
 print("================================================================================");
 
 const fleetPerformancePipeline = [
-  // Stage 1: Group by vehicle registration and corridor
+  // Group by vehicle registration and corridor
   {
     $group: {
       _id: {
@@ -734,7 +726,7 @@ const fleetPerformancePipeline = [
     }
   },
   
-  // Stage 2: Format output metrics
+  // Format output metrics
   {
     $project: {
       _id: 0,
@@ -748,7 +740,7 @@ const fleetPerformancePipeline = [
     }
   },
   
-  // Stage 3: Order by corridor and registration
+  // Order by corridor and registration
   { $sort: { corridor: 1, vehicle_registration: 1 } }
 ];
 
@@ -756,9 +748,7 @@ const fleetMetricsResults = db.vehicle_telemetry.aggregate(fleetPerformancePipel
 printjson(fleetMetricsResults);
 
 
-// ----------------------------------------------------------------------------
-// PERFORMANCE BENCHMARKING WITH EXPLAIN("executionStats")
-// ----------------------------------------------------------------------------
+// Benchmarks with explain("executionStats")
 
 print("\n================================================================================");
 print("EXPLAIN PLAN 1: GEOSPATIAL 2DSPHERE INDEX SCAN (Query 1)");

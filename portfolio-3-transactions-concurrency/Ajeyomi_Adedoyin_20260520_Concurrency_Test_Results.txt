@@ -1,241 +1,624 @@
 ================================================================================
-POSTGRESQL TRANSACTIONS & CONCURRENCY TEST RESULTS
-Student Name: Adedoyin Ajeyomi
-Student ID:   20260520
-Course:       MIT 8103 - Advanced Database Systems
-Case Study:   Adedoyin Mobility and Logistics
-Portfolio 3:  Transactions and Concurrency Control
-Engine:       PostgreSQL 14+
+POSTGRESQL TRANSACTIONS AND CONCURRENCY TEST RESULTS
+Case study: Adedoyin Mobility and Logistics
+Run on: 2026-11-12 12:21:44
 ================================================================================
 
---------------------------------------------------------------------------------
-SCENARIO 1: ACID TRANSACTION TESTS (COMMIT & ROLLBACK)
---------------------------------------------------------------------------------
-
-[TEST 1A]: Successful Booking Transaction (COMMIT)
---------------------------------------------------------------------------------
-adedoyin_mobility=# BEGIN;
-BEGIN
-adedoyin_mobility=*# SELECT trip_id, route_id, vehicle_id, trip_status 
-adedoyin_mobility-*# FROM trips 
-adedoyin_mobility-*# WHERE trip_id = 1 AND trip_status IN ('Scheduled', 'Boarding');
- trip_id | route_id | vehicle_id | trip_status 
----------+----------+------------+-------------
-       1 |        1 |          1 | Scheduled
+================================================================================
+ENVIRONMENT
+================================================================================
+SELECT version();
+                                 version                                 
+-------------------------------------------------------------------------
+ PostgreSQL 17.5 on x86_64-windows, compiled by msvc-19.44.35209, 64-bit
 (1 row)
 
-adedoyin_mobility=*# SELECT booking_id 
-adedoyin_mobility-*# FROM bookings 
-adedoyin_mobility-*# WHERE trip_id = 1 AND seat_number = 3 AND booking_status <> 'Cancelled';
+SHOW deadlock_timeout;
+ deadlock_timeout 
+------------------
+ 1s
+(1 row)
+
+SHOW default_transaction_isolation;
+ default_transaction_isolation 
+-------------------------------
+ read committed
+(1 row)
+
+SELECT COUNT(*) AS bookings_before_tests FROM bookings;
+ bookings_before_tests 
+-----------------------
+                  8000
+(1 row)
+
+================================================================================
+SCENARIO 1: ACID TRANSACTIONS (COMMIT, ROLLBACK, FAILED STATEMENT)
+================================================================================
+-- Run in the database adedoyin_mobility (pgAdmin 4 Query Tool or psql).
+-- The real trips in the dataset are all Completed or Cancelled and their seats are
+-- already booked, so these tests use four new Scheduled demo trips (9001 to 9004).
+-- The concurrency tests in Ajeyomi_Adedoyin_20260520_Run_Concurrency_Tests.ps1
+-- use the same demo trips and remove them again at the end.
+-- Demo trips on route 3 (Lagos to Abuja, fare 18,500)
+DELETE FROM trips WHERE trip_id BETWEEN 9001 AND 9004;
+DELETE 0
+INSERT INTO trips (trip_id, route_id, vehicle_id, driver_id, departure_datetime, trip_status) VALUES
+    (9001, 3, 3, 3, '2026-12-01 07:00:00+01', 'Scheduled'),
+    (9002, 3, 4, 4, '2026-12-01 09:00:00+01', 'Scheduled'),
+    (9003, 3, 5, 5, '2026-12-01 11:00:00+01', 'Scheduled'),
+    (9004, 3, 6, 6, '2026-12-01 13:00:00+01', 'Scheduled');
+INSERT 0 4
+SELECT setval('bookings_booking_id_seq', (SELECT MAX(booking_id) FROM bookings));
+ setval 
+--------
+   8000
+(1 row)
+
+-- ==============================================================================
+-- SCENARIO 1: ACID TRANSACTIONS
+-- ==============================================================================
+-- ------------------------------------------------------------------------------
+-- 1A: Successful transaction (COMMIT)
+-- Customer 101 books seat 3 on demo trip 9001 for 18,500.
+-- ------------------------------------------------------------------------------
+BEGIN;
+BEGIN
+SELECT trip_id, route_id, vehicle_id, trip_status
+FROM trips
+WHERE trip_id = 9001 AND trip_status IN ('Scheduled', 'Boarding');
+ trip_id | route_id | vehicle_id | trip_status 
+---------+----------+------------+-------------
+    9001 |        3 |          3 | Scheduled
+(1 row)
+
+SELECT booking_id
+FROM bookings
+WHERE trip_id = 9001 AND seat_number = 3 AND booking_status <> 'Cancelled';
  booking_id 
 ------------
 (0 rows)
 
-adedoyin_mobility=*# INSERT INTO bookings (
-adedoyin_mobility(*#     trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference
-adedoyin_mobility(*# ) VALUES (
-adedoyin_mobility(*#     1, 101, 3, 28500.00, 'Confirmed', 'PAY-TXN-2026-001'
-adedoyin_mobility(*# );
+INSERT INTO bookings (trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference)
+VALUES (9001, 101, 3, 18500.00, 'Confirmed', 'PAY-TXN-1A-001');
 INSERT 0 1
-
-adedoyin_mobility=*# COMMIT;
+COMMIT;
 COMMIT
-
-adedoyin_mobility=# SELECT booking_id, trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference 
-adedoyin_mobility-# FROM bookings WHERE payment_reference = 'PAY-TXN-2026-001';
+SELECT booking_id, trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference
+FROM bookings
+WHERE payment_reference = 'PAY-TXN-1A-001';
  booking_id | trip_id | customer_id | seat_number | ticket_amount | booking_status | payment_reference 
 ------------+---------+-------------+-------------+---------------+----------------+-------------------
-       5001 |       1 |         101 |           3 |      28500.00 | Confirmed      | PAY-TXN-2026-001
+       8001 |    9001 |         101 |           3 |      18500.00 | Confirmed      | PAY-TXN-1A-001
 (1 row)
 
-RESULT: Transaction committed successfully. Seat 3 is permanently recorded.
-
-
-[TEST 1B]: Aborted Transaction on Payment Failure (ROLLBACK)
---------------------------------------------------------------------------------
-adedoyin_mobility=# BEGIN;
+-- ------------------------------------------------------------------------------
+-- 1B: Payment fails, so the booking is undone (ROLLBACK)
+-- ------------------------------------------------------------------------------
+BEGIN;
 BEGIN
-adedoyin_mobility=*# INSERT INTO bookings (
-adedoyin_mobility(*#     trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference
-adedoyin_mobility(*# ) VALUES (
-adedoyin_mobility(*#     1, 102, 4, 28500.00, 'Confirmed', 'PAY-TXN-2026-FAILED'
-adedoyin_mobility(*# );
+INSERT INTO bookings (trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference)
+VALUES (9001, 102, 4, 18500.00, 'Confirmed', 'PAY-TXN-1B-FAILED');
 INSERT 0 1
+-- Inside the transaction the new row is visible
+SELECT booking_id, seat_number, payment_reference
+FROM bookings
+WHERE payment_reference = 'PAY-TXN-1B-FAILED';
+ booking_id | seat_number | payment_reference 
+------------+-------------+-------------------
+       8002 |           4 | PAY-TXN-1B-FAILED
+(1 row)
 
--- External payment API triggers failure:
-adedoyin_mobility=*# ROLLBACK;
+-- The card payment is declined, so everything is undone
+ROLLBACK;
 ROLLBACK
-
-adedoyin_mobility=# SELECT * FROM bookings WHERE payment_reference = 'PAY-TXN-2026-FAILED';
- booking_id | trip_id | customer_id | seat_number | ticket_amount | booking_status | payment_reference | booking_timestamp 
-------------+---------+-------------+-------------+---------------+----------------+-------------------+-------------------
+-- After the rollback the row is gone and seat 4 is free again
+SELECT booking_id, seat_number, payment_reference
+FROM bookings
+WHERE payment_reference = 'PAY-TXN-1B-FAILED';
+ booking_id | seat_number | payment_reference 
+------------+-------------+-------------------
 (0 rows)
 
-RESULT: Changes completely undone. Seat 4 remains vacant. Atomicity guaranteed.
-
-
---------------------------------------------------------------------------------
-SCENARIO 2 & 3: CONCURRENCY CONTROL USING ROW-LEVEL LOCKS (SELECT FOR UPDATE)
---------------------------------------------------------------------------------
-
-Two simultaneous terminal sessions attempting to book Seat 5 on Trip 2:
-
-+-------------------------------------------------+-------------------------------------------------+
-| TERMINAL A (Customer A - Session 1)            | TERMINAL B (Customer B - Session 2)             |
-+-------------------------------------------------+-------------------------------------------------+
-| [08:00:01] BEGIN;                               |                                                 |
-| BEGIN                                           |                                                 |
-|                                                 |                                                 |
-| [08:00:02] SELECT trip_id, trip_status          |                                                 |
-| FROM trips WHERE trip_id = 2 FOR UPDATE;        |                                                 |
-|  trip_id | trip_status                          |                                                 |
-| ---------+-------------                         |                                                 |
-|        2 | Scheduled                            |                                                 |
-| (1 row - Exclusive Lock Acquired)               |                                                 |
-|                                                 |                                                 |
-|                                                 | [08:00:03] BEGIN;                               |
-|                                                 | BEGIN                                           |
-|                                                 |                                                 |
-|                                                 | [08:00:04] SELECT trip_id, trip_status          |
-|                                                 | FROM trips WHERE trip_id = 2 FOR UPDATE;        |
-|                                                 | ... [WAITING FOR LOCK ON TRIP 2] ...            |
-|                                                 |                                                 |
-| [08:00:05] INSERT INTO bookings (               |                                                 |
-|   trip_id, customer_id, seat_number,            |                                                 |
-|   ticket_amount, booking_status, payment_ref    |                                                 |
-| ) VALUES (                                      |                                                 |
-|   2, 103, 5, 28500.00, 'Confirmed', 'WINNER'    |                                                 |
-| );                                              |                                                 |
-| INSERT 0 1                                      |                                                 |
-|                                                 |                                                 |
-| [08:00:06] COMMIT;                              |                                                 |
-| COMMIT (Lock Released)                          |                                                 |
-|                                                 | [08:00:06] (Lock Acquired - Resumes Execution)  |
-|                                                 |  trip_id | trip_status                          |
-|                                                 | ---------+-------------                         |
-|                                                 |        2 | Scheduled                            |
-|                                                 | (1 row)                                         |
-|                                                 |                                                 |
-|                                                 | [08:00:07] SELECT seat_number, booking_status   |
-|                                                 | FROM bookings                                   |
-|                                                 | WHERE trip_id = 2 AND seat_number = 5;          |
-|                                                 |  seat_number | booking_status                   |
-|                                                 | -------------+----------------                  |
-|                                                 |            5 | Confirmed                        |
-|                                                 | (Seat already taken by Customer A!)             |
-|                                                 |                                                 |
-|                                                 | [08:00:08] ROLLBACK;                            |
-|                                                 | ROLLBACK (Customer safely informed)             |
-+-------------------------------------------------+-------------------------------------------------+
-
-RESULT: Race condition prevented. Seat 5 was not double-booked.
-
-
---------------------------------------------------------------------------------
-SCENARIO 4: TRANSACTION ISOLATION LEVEL COMPARISON
---------------------------------------------------------------------------------
-
-[TEST 4A]: READ COMMITTED (Default) - Non-Repeatable Read Observed
---------------------------------------------------------------------------------
-Session 1 (Auditor):
-  adedoyin_mobility=# BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;
-  BEGIN
-  adedoyin_mobility=*# SELECT SUM(ticket_amount) FROM bookings WHERE trip_id = 1;
-     sum    
-  -----------
-   142500.00
-  (1 row)
-
-Session 2 (New Passenger):
-  adedoyin_mobility=# BEGIN;
-  adedoyin_mobility=*# INSERT INTO bookings (trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference)
-  adedoyin_mobility(*# VALUES (1, 104, 6, 28500.00, 'Confirmed', 'PAY-NEW-001');
-  INSERT 0 1
-  adedoyin_mobility=*# COMMIT;
-  COMMIT
-
-Session 1 (Auditor - Same Transaction):
-  adedoyin_mobility=*# SELECT SUM(ticket_amount) FROM bookings WHERE trip_id = 1;
-     sum    
-  -----------
-   171000.00
-  (1 row - Sum changed because newly committed row was visible!)
-  adedoyin_mobility=*# COMMIT;
-  COMMIT
-
-
-[TEST 4B]: REPEATABLE READ - Snapshot Isolation Preserved
---------------------------------------------------------------------------------
-Session 1 (Auditor):
-  adedoyin_mobility=# BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
-  BEGIN
-  adedoyin_mobility=*# SELECT SUM(ticket_amount) FROM bookings WHERE trip_id = 1;
-     sum    
-  -----------
-   171000.00
-  (1 row)
-
-Session 2 (Another Passenger):
-  adedoyin_mobility=# BEGIN;
-  adedoyin_mobility=*# INSERT INTO bookings (trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference)
-  adedoyin_mobility(*# VALUES (1, 105, 7, 28500.00, 'Confirmed', 'PAY-NEW-002');
-  INSERT 0 1
-  adedoyin_mobility=*# COMMIT;
-  COMMIT
-
-Session 1 (Auditor - Same Transaction):
-  adedoyin_mobility=*# SELECT SUM(ticket_amount) FROM bookings WHERE trip_id = 1;
-     sum    
-  -----------
-   171000.00
-  (1 row - Frozen snapshot! New booking is invisible until Session 1 completes)
-  adedoyin_mobility=*# COMMIT;
-  COMMIT
-
-RESULT: Repeatable Read guarantees stable calculations for accounting reports.
-
-
---------------------------------------------------------------------------------
-SCENARIO 5: DEADLOCK DETECTION TEST LOG
---------------------------------------------------------------------------------
-
-Session 1 (PID: 14210) updates Vehicle 1, then wants Vehicle 2.
-Session 2 (PID: 14856) updates Vehicle 2, then wants Vehicle 1.
-
-Session 1:
-  adedoyin_mobility=# BEGIN;
-  BEGIN
-  adedoyin_mobility=*# UPDATE vehicles SET status = 'In-Transit' WHERE vehicle_id = 1;
-  UPDATE 1
-
-Session 2:
-  adedoyin_mobility=# BEGIN;
-  BEGIN
-  adedoyin_mobility=*# UPDATE vehicles SET status = 'Under-Maintenance' WHERE vehicle_id = 2;
-  UPDATE 1
-
-Session 1:
-  adedoyin_mobility=*# UPDATE vehicles SET status = 'In-Transit' WHERE vehicle_id = 2;
-  ... (waiting for Session 2 to release lock on vehicle 2) ...
-
-Session 2:
-  adedoyin_mobility=*# UPDATE vehicles SET status = 'Under-Maintenance' WHERE vehicle_id = 1;
-
-PostgreSQL Server Log & Session 2 Terminal Output:
---------------------------------------------------------------------------------
-ERROR:  deadlock detected
-DETAIL:  Process 14856 waits for ShareLock on transaction 8912; blocked by process 14210.
-Process 14210 waits for ExclusiveLock on tuple (0,2) of relation "vehicles"; blocked by process 14856.
-HINT:  See server log for query details.
-CONTEXT:  while updating tuple (0,1) in relation "vehicles"
-adedoyin_mobility=!# ROLLBACK;
+-- ------------------------------------------------------------------------------
+-- 1C: A failing statement cancels the whole transaction (atomicity)
+-- Two seats are booked in one transaction. The second has a negative price,
+-- which breaks the CHECK rule chk_booking_amount, so neither seat is kept.
+-- ------------------------------------------------------------------------------
+BEGIN;
+BEGIN
+INSERT INTO bookings (trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference)
+VALUES (9001, 103, 6, 18500.00, 'Confirmed', 'PAY-TXN-1C-SEAT6');
+INSERT 0 1
+INSERT INTO bookings (trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference)
+VALUES (9001, 104, 7, -100.00, 'Confirmed', 'PAY-TXN-1C-SEAT7');
+psql:C:/Users/Admin/AppData/Local/Temp/aml_concurrency_tests/SCENARIO_1__ACID_TRANSACTIONS__COMMIT__ROLLBACK__FAILED_STATEMENT_.sql:80: ERROR:  new row for relation "bookings" violates check constraint "chk_booking_amount"
+DETAIL:  Failing row contains (8004, 9001, 104, 7, -100.00, Confirmed, PAY-TXN-1C-SEAT7, 2026-11-12 12:21:45.353435+01).
+-- PostgreSQL now refuses every further command in this transaction
+SELECT COUNT(*) FROM bookings WHERE trip_id = 9001;
+psql:C:/Users/Admin/AppData/Local/Temp/aml_concurrency_tests/SCENARIO_1__ACID_TRANSACTIONS__COMMIT__ROLLBACK__FAILED_STATEMENT_.sql:83: ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ROLLBACK;
 ROLLBACK
+-- Seat 6 was undone together with the failed seat 7
+SELECT booking_id, seat_number, payment_reference
+FROM bookings
+WHERE payment_reference IN ('PAY-TXN-1C-SEAT6', 'PAY-TXN-1C-SEAT7');
+ booking_id | seat_number | payment_reference 
+------------+-------------+-------------------
+(0 rows)
 
-Session 1 Unblocks and Finishes:
+-- To remove all demo rows again (bookings are removed with their trip):
+-- DELETE FROM trips WHERE trip_id BETWEEN 9001 AND 9004;
+
+================================================================================
+SCENARIO 2: DOUBLE-BOOKING RACE WITHOUT A ROW LOCK
+Both customers see seat 5 as free. Only the UNIQUE (trip_id, seat_number) rule stops the second insert.
+================================================================================
 --------------------------------------------------------------------------------
-UPDATE 1
-adedoyin_mobility=*# COMMIT;
+SESSION A
+--------------------------------------------------------------------------------
+BEGIN;
+BEGIN
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'A : checking whether seat 5 on trip 9003 is free' AS step;
+    clock     |                       step                       
+--------------+--------------------------------------------------
+ 12:21:45.554 | A : checking whether seat 5 on trip 9003 is free
+(1 row)
+
+SELECT seat_number FROM bookings WHERE trip_id = 9003 AND seat_number = 5;
+ seat_number 
+-------------
+(0 rows)
+
+SELECT pg_sleep(4) AS customer_A_is_entering_payment_details;
+ customer_a_is_entering_payment_details 
+----------------------------------------
+ 
+(1 row)
+
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'A : inserting seat 5' AS step;
+    clock     |         step         
+--------------+----------------------
+ 12:21:49.567 | A : inserting seat 5
+(1 row)
+
+INSERT INTO bookings (trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference)
+VALUES (9003, 201, 5, 18500.00, 'Confirmed', 'RACE-A');
+INSERT 0 1
+COMMIT;
+COMMIT
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'A : committed' AS step;
+    clock     |     step      
+--------------+---------------
+ 12:21:49.570 | A : committed
+(1 row)
+
+--------------------------------------------------------------------------------
+SESSION B
+--------------------------------------------------------------------------------
+\timing on
+Timing is on.
+BEGIN;
+BEGIN
+Time: 0.113 ms
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'B : checking whether seat 5 on trip 9003 is free' AS step;
+    clock     |                       step                       
+--------------+--------------------------------------------------
+ 12:21:47.117 | B : checking whether seat 5 on trip 9003 is free
+(1 row)
+
+Time: 0.926 ms
+SELECT seat_number FROM bookings WHERE trip_id = 9003 AND seat_number = 5;
+ seat_number 
+-------------
+(0 rows)
+
+Time: 0.922 ms
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'B : seat looks free, inserting seat 5' AS step;
+    clock     |                 step                  
+--------------+---------------------------------------
+ 12:21:47.121 | B : seat looks free, inserting seat 5
+(1 row)
+
+Time: 0.129 ms
+INSERT INTO bookings (trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference)
+VALUES (9003, 202, 5, 18500.00, 'Confirmed', 'RACE-B');
+INSERT 0 1
+Time: 1.461 ms
+ROLLBACK;
+ROLLBACK
+Time: 0.122 ms
+\timing off
+Timing is off.
+SELECT trip_id, seat_number, customer_id, payment_reference FROM bookings WHERE trip_id = 9003 ORDER BY seat_number;
+ trip_id | seat_number | customer_id | payment_reference 
+---------+-------------+-------------+-------------------
+(0 rows)
+
+================================================================================
+SCENARIO 3: SEAT BOOKING WITH A ROW LOCK (SELECT FOR UPDATE)
+Session B has to wait for session A, then sees the seat is already taken and stops cleanly.
+================================================================================
+--------------------------------------------------------------------------------
+SESSION A
+--------------------------------------------------------------------------------
+BEGIN;
+BEGIN
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'A : requesting the lock on trip 9002' AS step;
+    clock     |                 step                 
+--------------+--------------------------------------
+ 12:21:49.717 | A : requesting the lock on trip 9002
+(1 row)
+
+SELECT trip_id, trip_status FROM trips WHERE trip_id = 9002 FOR UPDATE;
+ trip_id | trip_status 
+---------+-------------
+    9002 | Scheduled
+(1 row)
+
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'A : lock acquired, checking seat 5' AS step;
+    clock     |                step                
+--------------+------------------------------------
+ 12:21:49.719 | A : lock acquired, checking seat 5
+(1 row)
+
+SELECT seat_number FROM bookings WHERE trip_id = 9002 AND seat_number = 5;
+ seat_number 
+-------------
+(0 rows)
+
+SELECT pg_sleep(4) AS customer_A_is_entering_payment_details;
+ customer_a_is_entering_payment_details 
+----------------------------------------
+ 
+(1 row)
+
+INSERT INTO bookings (trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference)
+VALUES (9002, 203, 5, 18500.00, 'Confirmed', 'LOCK-A');
+INSERT 0 1
+COMMIT;
+COMMIT
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'A : committed, lock released' AS step;
+    clock     |             step             
+--------------+------------------------------
+ 12:21:53.730 | A : committed, lock released
+(1 row)
+
+--------------------------------------------------------------------------------
+SESSION B
+--------------------------------------------------------------------------------
+\timing on
+Timing is on.
+BEGIN;
+BEGIN
+Time: 0.133 ms
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'B : requesting the lock on trip 9002' AS step;
+    clock     |                 step                 
+--------------+--------------------------------------
+ 12:21:51.315 | B : requesting the lock on trip 9002
+(1 row)
+
+Time: 0.960 ms
+SELECT trip_id, trip_status FROM trips WHERE trip_id = 9002 FOR UPDATE;
+ trip_id | trip_status 
+---------+-------------
+    9002 | Scheduled
+(1 row)
+
+Time: 2414.956 ms (00:02.415)
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'B : lock acquired after waiting, checking seat 5' AS step;
+    clock     |                       step                       
+--------------+--------------------------------------------------
+ 12:21:53.731 | B : lock acquired after waiting, checking seat 5
+(1 row)
+
+Time: 0.225 ms
+SELECT seat_number, booking_status, customer_id FROM bookings WHERE trip_id = 9002 AND seat_number = 5;
+ seat_number | booking_status | customer_id 
+-------------+----------------+-------------
+           5 | Confirmed      |         203
+(1 row)
+
+Time: 0.751 ms
+ROLLBACK;
+ROLLBACK
+Time: 0.189 ms
+\timing off
+Timing is off.
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'B : rolled back, customer is told the seat is taken' AS step;
+    clock     |                        step                         
+--------------+-----------------------------------------------------
+ 12:21:53.732 | B : rolled back, customer is told the seat is taken
+(1 row)
+
+================================================================================
+SCENARIO 4 SETUP: TWO EXISTING BOOKINGS ON TRIP 9004
+================================================================================
+INSERT INTO bookings (trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference) VALUES
+  (9004, 301, 1, 18500.00, 'Confirmed', 'ISO-BASE-1'),
+  (9004, 302, 2, 18500.00, 'Confirmed', 'ISO-BASE-2');
+INSERT 0 2
+
+================================================================================
+SCENARIO 4A: READ COMMITTED (DEFAULT)
+The auditor's second read inside the same transaction sees the booking committed by session B.
+================================================================================
+--------------------------------------------------------------------------------
+SESSION A
+--------------------------------------------------------------------------------
+BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;
+BEGIN
+SELECT 'first read' AS step, COUNT(*) AS tickets, SUM(ticket_amount) AS revenue FROM bookings WHERE trip_id = 9004;
+    step    | tickets | revenue  
+------------+---------+----------
+ first read |       2 | 37000.00
+(1 row)
+
+SELECT pg_sleep(4) AS auditor_is_working;
+ auditor_is_working 
+--------------------
+ 
+(1 row)
+
+SELECT 'second read, same transaction' AS step, COUNT(*) AS tickets, SUM(ticket_amount) AS revenue FROM bookings WHERE trip_id = 9004;
+             step              | tickets | revenue  
+-------------------------------+---------+----------
+ second read, same transaction |       3 | 55500.00
+(1 row)
+
+COMMIT;
 COMMIT
 
-RESULT: PostgreSQL's deadlock detector resolved the cyclic dependency automatically in 1002 ms.
+--------------------------------------------------------------------------------
+SESSION B
+--------------------------------------------------------------------------------
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'B : new passenger books seat 3 and commits' AS step;
+    clock     |                    step                    
+--------------+--------------------------------------------
+ 12:21:55.773 | B : new passenger books seat 3 and commits
+(1 row)
+
+INSERT INTO bookings (trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference)
+VALUES (9004, 303, 3, 18500.00, 'Confirmed', 'ISO-RC-NEW');
+INSERT 0 1
+
 ================================================================================
+SCENARIO 4B: REPEATABLE READ
+The auditor keeps the same snapshot for the whole transaction and only sees the new booking after committing.
+================================================================================
+--------------------------------------------------------------------------------
+SESSION A
+--------------------------------------------------------------------------------
+BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+BEGIN
+SELECT 'first read' AS step, COUNT(*) AS tickets, SUM(ticket_amount) AS revenue FROM bookings WHERE trip_id = 9004;
+    step    | tickets | revenue  
+------------+---------+----------
+ first read |       3 | 55500.00
+(1 row)
+
+SELECT pg_sleep(4) AS auditor_is_working;
+ auditor_is_working 
+--------------------
+ 
+(1 row)
+
+SELECT 'second read, same transaction' AS step, COUNT(*) AS tickets, SUM(ticket_amount) AS revenue FROM bookings WHERE trip_id = 9004;
+             step              | tickets | revenue  
+-------------------------------+---------+----------
+ second read, same transaction |       3 | 55500.00
+(1 row)
+
+COMMIT;
+COMMIT
+SELECT 'after commit' AS step, COUNT(*) AS tickets, SUM(ticket_amount) AS revenue FROM bookings WHERE trip_id = 9004;
+     step     | tickets | revenue  
+--------------+---------+----------
+ after commit |       4 | 74000.00
+(1 row)
+
+--------------------------------------------------------------------------------
+SESSION B
+--------------------------------------------------------------------------------
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'B : new passenger books seat 4 and commits' AS step;
+    clock     |                    step                    
+--------------+--------------------------------------------
+ 12:21:59.856 | B : new passenger books seat 4 and commits
+(1 row)
+
+INSERT INTO bookings (trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference)
+VALUES (9004, 304, 4, 18500.00, 'Confirmed', 'ISO-RR-NEW');
+INSERT 0 1
+
+================================================================================
+SCENARIO 5A: DEADLOCK (LOCKS TAKEN IN OPPOSITE ORDER)
+Session A locks vehicle 1 then 2. Session B locks vehicle 2 then 1. PostgreSQL must abort one of them.
+================================================================================
+--------------------------------------------------------------------------------
+SESSION A
+--------------------------------------------------------------------------------
+\timing on
+Timing is on.
+BEGIN;
+BEGIN
+Time: 0.265 ms
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'A : locking vehicle 1' AS step;
+    clock     |         step          
+--------------+-----------------------
+ 12:22:02.594 | A : locking vehicle 1
+(1 row)
+
+Time: 1.373 ms
+UPDATE vehicles SET status = 'In-Transit' WHERE vehicle_id = 1;
+UPDATE 1
+Time: 1.712 ms
+SELECT pg_sleep(2) AS A_pause;
+ a_pause 
+---------
+ 
+(1 row)
+
+Time: 2005.669 ms (00:02.006)
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'A : now requesting vehicle 2' AS step;
+    clock     |             step             
+--------------+------------------------------
+ 12:22:04.606 | A : now requesting vehicle 2
+(1 row)
+
+Time: 0.472 ms
+UPDATE vehicles SET status = 'In-Transit' WHERE vehicle_id = 2;
+UPDATE 1
+Time: 2057.223 ms (00:02.057)
+ROLLBACK;
+ROLLBACK
+Time: 0.395 ms
+\timing off
+Timing is off.
+
+--------------------------------------------------------------------------------
+SESSION B
+--------------------------------------------------------------------------------
+\timing on
+Timing is on.
+BEGIN;
+BEGIN
+Time: 0.127 ms
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'B : locking vehicle 2' AS step;
+    clock     |         step          
+--------------+-----------------------
+ 12:22:03.642 | B : locking vehicle 2
+(1 row)
+
+Time: 1.048 ms
+UPDATE vehicles SET status = 'Under-Maintenance' WHERE vehicle_id = 2;
+UPDATE 1
+Time: 1.520 ms
+SELECT pg_sleep(2) AS B_pause;
+ b_pause 
+---------
+ 
+(1 row)
+
+Time: 2005.581 ms (00:02.006)
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'B : now requesting vehicle 1' AS step;
+    clock     |             step             
+--------------+------------------------------
+ 12:22:05.654 | B : now requesting vehicle 1
+(1 row)
+
+Time: 0.574 ms
+UPDATE vehicles SET status = 'Under-Maintenance' WHERE vehicle_id = 1;
+psql:C:/Users/Admin/AppData/Local/Temp/aml_concurrency_tests/B_SCENARIO_5A__DEADLOCK__LOCKS_TAKEN_IN_OPPOSITE_ORDER_.sql:7: ERROR:  deadlock detected
+DETAIL:  Process 28124 waits for ShareLock on transaction 1311; blocked by process 33492.
+Process 33492 waits for ShareLock on transaction 1312; blocked by process 28124.
+HINT:  See server log for query details.
+CONTEXT:  while updating tuple (0,1) in relation "vehicles"
+Time: 1009.617 ms (00:01.010)
+ROLLBACK;
+ROLLBACK
+Time: 0.615 ms
+\timing off
+Timing is off.
+
+================================================================================
+SCENARIO 5B: DEADLOCK PREVENTED (SAME LOCK ORDER)
+Both sessions lock vehicle 1 first and vehicle 2 second, so B simply waits and no deadlock occurs.
+================================================================================
+--------------------------------------------------------------------------------
+SESSION A
+--------------------------------------------------------------------------------
+\timing on
+Timing is on.
+BEGIN;
+BEGIN
+Time: 0.276 ms
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'A : locking vehicle 1' AS step;
+    clock     |         step          
+--------------+-----------------------
+ 12:22:07.000 | A : locking vehicle 1
+(1 row)
+
+Time: 1.630 ms
+UPDATE vehicles SET status = 'In-Transit' WHERE vehicle_id = 1;
+UPDATE 1
+Time: 1.977 ms
+SELECT pg_sleep(3) AS A_pause;
+ a_pause 
+---------
+ 
+(1 row)
+
+Time: 3014.249 ms (00:03.014)
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'A : locking vehicle 2' AS step;
+    clock     |         step          
+--------------+-----------------------
+ 12:22:10.022 | A : locking vehicle 2
+(1 row)
+
+Time: 0.913 ms
+UPDATE vehicles SET status = 'In-Transit' WHERE vehicle_id = 2;
+UPDATE 1
+Time: 0.866 ms
+ROLLBACK;
+ROLLBACK
+Time: 0.618 ms
+\timing off
+Timing is off.
+
+--------------------------------------------------------------------------------
+SESSION B
+--------------------------------------------------------------------------------
+\timing on
+Timing is on.
+BEGIN;
+BEGIN
+Time: 0.148 ms
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'B : requesting vehicle 1' AS step;
+    clock     |           step           
+--------------+--------------------------
+ 12:22:07.906 | B : requesting vehicle 1
+(1 row)
+
+Time: 1.123 ms
+UPDATE vehicles SET status = 'Under-Maintenance' WHERE vehicle_id = 1;
+UPDATE 1
+Time: 2117.853 ms (00:02.118)
+SELECT to_char(clock_timestamp(), 'HH24:MI:SS.MS') AS clock, 'B : got vehicle 1 after waiting, locking vehicle 2' AS step;
+    clock     |                        step                        
+--------------+----------------------------------------------------
+ 12:22:10.025 | B : got vehicle 1 after waiting, locking vehicle 2
+(1 row)
+
+Time: 0.342 ms
+UPDATE vehicles SET status = 'Under-Maintenance' WHERE vehicle_id = 2;
+UPDATE 1
+Time: 0.471 ms
+ROLLBACK;
+ROLLBACK
+Time: 0.267 ms
+\timing off
+Timing is off.
+
+================================================================================
+CLEAN UP DEMO DATA
+================================================================================
+DELETE FROM trips WHERE trip_id BETWEEN 9001 AND 9004;
+DELETE 4
+SELECT COUNT(*) AS demo_trips_left FROM trips WHERE trip_id >= 9001;
+ demo_trips_left 
+-----------------
+               0
+(1 row)
+
+SELECT COUNT(*) AS bookings_after_tests FROM bookings;
+ bookings_after_tests 
+----------------------
+                 8000
+(1 row)
+
+SELECT vehicle_id, status FROM vehicles WHERE vehicle_id IN (1, 2) ORDER BY vehicle_id;
+ vehicle_id | status 
+------------+--------
+          1 | Active
+          2 | Active
+(2 rows)
+
