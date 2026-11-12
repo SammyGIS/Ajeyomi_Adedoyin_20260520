@@ -1,166 +1,132 @@
-# Portfolio 4: NoSQL Databases (Document Data Store)
+# Portfolio 4: NoSQL (Document Database)
 
-**Student Name:** Adedoyin Ajeyomi  
-**Student ID:** 20260520  
-**Course:** MIT 8103 - Advanced Database Systems  
-**Case Study:** Adedoyin Mobility and Logistics  
-**Database Engine:** MongoDB 6.0+ / mongosh 2.0+  
-
----
-
-## 1. Introduction
-
-Relational databases (PostgreSQL) enforce strict ACID compliance for seat reservations and financial auditing. However, interstate logistics operations also generate high-frequency, semi-structured data:
-- **IoT Fleet Telemetry:** Continuous GPS pings (latitude, longitude, speed, fuel, engine metrics) every 30–60 seconds from 20 fleet vehicles.
-- **Dynamic Parcel Lifecycles:** Packages passing through variable checkpoints (receipt, loading, in-transit checks, destination arrival, and recipient NIN verification).
-
-To handle these high-velocity streams without write contention or relational table bloat, **Adedoyin Mobility and Logistics** deploys a **Polyglot Persistence Architecture**, pairing PostgreSQL for transactions with **MongoDB** for document-based telemetry and tracking.
+Student Name: Adedoyin Ajeyomi
+Student ID: 20260520
+Course: MIT 8103 - Advanced Database Systems
+Case Study: Adedoyin Mobility and Logistics
+Database: MongoDB 9.0 (mongosh 2.14)
 
 ---
 
-## 2. Relational (RDBMS) vs. NoSQL Document Store
+## 1. Why my company needs a NoSQL database
 
-| Dimension | Relational (PostgreSQL) | Document Store (MongoDB) | Applied Role at Adedoyin Mobility |
-| :--- | :--- | :--- | :--- |
-| **Data Model** | Rigid tables, rows, columns, foreign keys | Self-contained BSON documents, embedded arrays | Telemetry pings and tracking trails are stored as single documents. |
-| **Schema Flexibility** | Fixed schema (`ALTER TABLE` required) | Dynamic schema with `$jsonSchema` validation | Seamlessly supports evolving IoT sensor payloads and checkpoints. |
-| **Write Performance** | Lower throughput (WAL logging, B-tree updates) | High write throughput (WiredTiger engine) | Ingests thousands of continuous IoT pings without slowing booking desks. |
-| **Geospatial Support** | Requires PostGIS extension | Native GeoJSON with `2dsphere` indexes | Powers spherical proximity searches (`$nearSphere`) on Nigerian highways. |
-| **Query Mechanism** | SQL with multi-table `JOIN`s | MQL and multi-stage Aggregation Pipelines | Retrieves an entire package audit trail in a single indexed read. |
-| **Data Retention** | Manual SQL `DELETE` cron jobs | Native Time-To-Live (TTL) index | Automatically purges raw telemetry after 30 days (`expireAfterSeconds`). |
+PostgreSQL is perfect for bookings, seats and money, because those need strict rules. But my company also produces two kinds of data that do not fit a table so well:
 
----
+- GPS pings. Every vehicle sends its location, speed, fuel and engine temperature every 15 minutes during a trip. This is a steady stream of small records, and the fields can change when a new sensor is added.
+- Parcel history. A parcel passes through a different number of checkpoints depending on what happens to it (registered, loaded, in transit, arrived, delivered or returned). In a table this would be many rows joined together. In a document database the whole history sits inside the parcel itself.
 
-## 3. Polyglot Persistence Architecture
+So I used MongoDB as a document database for these two things, and kept PostgreSQL for bookings. Using two databases for the jobs they do best is called polyglot persistence.
 
-The diagram below illustrates the clean separation of responsibilities between PostgreSQL and MongoDB:
+![Two databases for one company](assets/Ajeyomi_Adedoyin_20260520_NoSQL_Document_Architecture.png)
 
-![Adedoyin Mobility Polyglot Architecture](assets/Ajeyomi_Adedoyin_20260520_NoSQL_Document_Architecture.png)
+## 2. The data
 
-```mermaid
-flowchart TD
-    app["Client Applications (Web Booking, Mobile Apps, IoT Modems)"]
-    pg[("PostgreSQL 14+<br/>ACID Relational Core")]
-    mongo[("MongoDB 6.0+<br/>NoSQL Document Store")]
-    dash["Enterprise Operations Dashboard"]
+The data is not typed by hand. A Python script, `data/Ajeyomi_Adedoyin_20260520_NoSQL_Data_Generator.py`, builds it from my SQL dataset, so both databases describe the same company:
 
-    app -->|"Bookings & Payments"| pg
-    app -->|"IoT Pings & Checkpoint Scans"| mongo
-    pg -.->|"Trip & Waybill Sync"| mongo
-    pg --> dash
-    mongo --> dash
-```
+- vehicle_telemetry: 23,802 pings. They come from the 897 completed trips in PostgreSQL, using the real vehicles, drivers and routes. A ping is made every 15 minutes along the road between the two stations.
+- parcel_tracking: 3,500 parcels. These are the same 3,500 parcels as in PostgreSQL, with the same waybill numbers, senders and recipients. Each one has its checkpoints stored inside it.
 
----
+Two links connect the databases. `vehicle_id` and `current_trip_id` in a ping match the vehicle and trip in PostgreSQL. `waybill_number` and `sender.customer_id` in a parcel match the parcel and customer in PostgreSQL.
 
-## 4. Document Collections & Schema Design
+A shortened ping from the real data looks like this:
 
-All datasets for this module reside in the central [`data/`](../data) directory:
-- Full NoSQL Specification: [`data/Ajeyomi_Adedoyin_20260520_NoSQL_Model.json`](../data/Ajeyomi_Adedoyin_20260520_NoSQL_Model.json)
-- Telemetry Collection: [`data/vehicle_telemetry.json`](../data/vehicle_telemetry.json)
-- Parcel Tracking Collection: [`data/parcel_tracking.json`](../data/parcel_tracking.json)
+    {
+      vehicle_id: 1,
+      registration_number: "APP-125KT",
+      route_corridor: "Enugu-Benin",
+      current_trip_id: 5,
+      driver: { driver_id: 9, name: "Tunde Bakare" },
+      location: { type: "Point", coordinates: [6.56474, 6.37956] },
+      metrics: { speed_kmh: 93.3, fuel_level_percent: 72.4, odometer_km: 108762.0 },
+      alerts: { speed_warning: false, harsh_braking: false },
+      recorded_at: ISODate("2026-06-01T14:33:02.000Z")
+    }
 
-### 4.1 Collection 1: `vehicle_telemetry`
-Stores time-series IoT device telemetry pings from fleet vehicles:
-- **Identifier & Reference:** `vehicle_id` (integer) and `registration_number` (e.g., `LAG-101-XA`).
-- **Location:** GeoJSON Point (`coordinates: [longitude, latitude]`).
-- **Operating Metrics:** `speed_kmh`, `fuel_level_percent`, `engine_temp_celsius`, and `odometer_km`.
-- **Safety Alerts:** Boolean flags for `speed_warning`, `harsh_braking`, and `fuel_leak_detected`.
-- **Timestamp:** UTC ISODate `recorded_at`.
+The full model with one real example of each collection is in `Ajeyomi_Adedoyin_20260520_NoSQL_Model.json`.
 
-```json
-{
-  "_id": "671fb010a1b2c3d4e5f60001",
-  "vehicle_id": 1,
-  "registration_number": "LAG-101-XA",
-  "route_corridor": "Lagos-Ibadan-Abuja",
-  "location": { "type": "Point", "coordinates": [3.3792, 6.5244] },
-  "location_address": "Ojota Regional Terminal Exit, Lagos",
-  "metrics": { "speed_kmh": 45.0, "fuel_level_percent": 95.0, "engine_temp_celsius": 86.0 },
-  "alerts": { "speed_warning": false },
-  "recorded_at": "2026-10-28T06:30:00Z"
-}
-```
+## 3. Rules in the collections (schema validation)
 
-### 4.2 Collection 2: `parcel_tracking`
-Stores end-to-end cargo logistics with an embedded array of checkpoint sub-documents:
-- **Waybill Number:** Barcode identifier (`AML-WB-YYYY-XXXX`).
-- **Parties:** Embedded `sender` and `recipient` objects with Nigerian NIN verification.
-- **Cargo Specifications:** `category`, `weight_kg`, `declared_value_ngn`, and `storage_condition`.
-- **Lifecycle Checkpoints:** An embedded array of handling milestones (`status`, `station`, `timestamp`, `handled_by`, `notes`).
+MongoDB does not force a schema, but I added validation so bad data is refused. For example, a ping must have a location, a speed between 0 and 200, and fuel between 0 and 100. A parcel must have a waybill number in the form AML-WB-2026-00001.
 
-```json
-{
-  "waybill_number": "AML-WB-2026-0002",
-  "sender": { "name": "Dr. Chinedu Eze", "phone": "+2348031122334" },
-  "recipient": { "name": "Amina Usman", "phone": "+2348055566778", "nin_required_for_pickup": true },
-  "cargo_details": { "category": "Medical Supplies", "storage_condition": "Ambient Dry Box" },
-  "current_status": "In-Transit",
-  "checkpoints": [
-    { "checkpoint_id": 1, "status": "Registered", "station": "Lagos Ojota Terminal", "timestamp": "2026-10-28T06:45:00Z" },
-    { "checkpoint_id": 2, "status": "Loaded", "station": "Lagos Ojota Terminal", "timestamp": "2026-10-28T07:10:00Z" },
-    { "checkpoint_id": 3, "status": "In-Transit", "station": "Ore Waypoint Junction", "timestamp": "2026-10-28T11:00:00Z" }
-  ]
-}
-```
+The validation caught a real mistake while I was building this. My data generator produced a fuel level of 101.3 for one ping, and MongoDB refused it. I fixed the generator so fuel never goes above 100. I also tested a parcel with the waybill number `BAD-123`. The real output shows:
 
----
+    refused: Document failed validation
 
-## 5. Specialised Indexing Strategies
+## 4. Indexes
 
-Seven targeted indexes were established to guarantee sub-millisecond lookups:
+I measured four queries first with no extra indexes, then created these indexes and measured again:
 
-1. **Geospatial 2dsphere Index:**
-   `db.vehicle_telemetry.createIndex({ location: "2dsphere" });`  
-   Enables spherical distance queries (`$nearSphere`) along curved Nigerian highway corridors.
-2. **Chronological Time-Series Index:**
-   `db.vehicle_telemetry.createIndex({ vehicle_id: 1, recorded_at: -1 });`  
-   Retrieves latest vehicle telemetry pings without in-memory sorting.
-3. **Corridor and Alert Index:**
-   `db.vehicle_telemetry.createIndex({ route_corridor: 1, "alerts.speed_warning": 1 });`  
-   Accelerates FRSC safety and speeding compliance queries.
-4. **Time-To-Live (TTL) Auto-Retention Index:**
-   `db.vehicle_telemetry.createIndex({ recorded_at: 1 }, { expireAfterSeconds: 2592000 });`  
-   Automatically purges raw IoT pings older than 30 days to optimize storage.
-5. **Unique B-Tree Waybill Index:**
-   `db.parcel_tracking.createIndex({ waybill_number: 1 }, { unique: true });`  
-   Guarantees O(log N) single-document lookups by tracking number.
-6. **Multikey Checkpoints Index:**
-   `db.parcel_tracking.createIndex({ "checkpoints.status": 1, "checkpoints.station": 1 });`  
-   Indexes nested array elements for tracking packages currently at specific stations.
-7. **Route Status Compound Index:**
-   `db.parcel_tracking.createIndex({ "route.origin_hub": 1, "route.destination_hub": 1, current_status: 1 });`  
-   Optimizes corridor dispatch reporting.
+- A 2dsphere index on the ping location, to find vehicles near a place.
+- An index on vehicle and time, to read one vehicle's history.
+- An index on corridor and speeding alert, to find speeding on a route.
+- A unique index on waybill number, to find a parcel straight away.
+- Two more indexes on parcel checkpoints and on parcel route and status.
 
----
+## 5. Results (real output from explain)
 
-## 6. Operational Queries & Performance Benchmarks
+All numbers below come from `explain("executionStats")` on my own computer. The unedited output is in `Ajeyomi_Adedoyin_20260520_NoSQL_Execution_Results.txt`.
 
-All scripts are in [`Ajeyomi_Adedoyin_20260520_MongoDB_Queries.js`](Ajeyomi_Adedoyin_20260520_MongoDB_Queries.js) and execution logs in [`Ajeyomi_Adedoyin_20260520_NoSQL_Execution_Results.txt`](Ajeyomi_Adedoyin_20260520_NoSQL_Execution_Results.txt).
+Q1, pings within 80 km of Abuja:
+- Before: full scan of 23,802 documents, 30 ms.
+- After: 2dsphere index scan, 2,762 documents examined, 8 ms. The query returns 2,428 pings.
 
-### Operational Queries:
-- **Query 1 (Geospatial Proximity):** Finds all vehicles within 80 km of Abuja Utako Hub using `$nearSphere`.
-- **Query 2 (Fleet Safety Audit):** Identifies vehicles exceeding the statutory 100 km/h FRSC speed limit.
-- **Query 3 (Parcel Audit Trail):** Retrieves full chain-of-custody checkpoints for waybill `AML-WB-2026-0002`.
-- **Query 4 (Terminal Throughput):** Aggregation pipeline (`$unwind` → `$group` → `$project` → `$sort`) auditing processed packages per terminal.
-- **Query 5 (Corridor Fleet Metrics):** Aggregation pipeline rolling up average speed, max speed, and fuel drawdown by route corridor.
+Q2, one vehicle's pings in one week, newest first:
+- Before: full scan plus a sort, 23,802 documents, 60 ms.
+- After: index scan, 88 documents, 0 ms.
 
-### Performance Benchmark Results (`explain("executionStats")`):
+Q3, find a parcel by waybill number:
+- Before: full scan of 3,500 documents, 5 ms.
+- After: index lookup, 1 document, 0 ms.
 
-| Query | Index Used | Unindexed Stage | Optimised Stage | Baseline Time | Optimised Time | Speedup Factor |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Q1: Geospatial Proximity** | `idx_telemetry_2dsphere_location` | `COLLSCAN` | `GEO_NEAR_2DSPHERE` | 4.82 ms | 0.41 ms | 11.7x |
-| **Q3: Waybill Lookup** | `idx_parcel_waybill_unique` | `COLLSCAN` | `IXSCAN` | 2.15 ms | 0.18 ms | 11.9x |
+Q4, speeding alerts on the Lagos-Abuja corridor:
+- Before: full scan of 23,802 documents, 59 ms.
+- After: index scan, 126 documents, 0 ms.
 
----
+The times are whole milliseconds, because that is what explain reports, so small times show as 0 ms. The number of documents examined is the clearest proof: for example, Q2 went from 23,802 documents to 88.
 
-## 7. How to Run in `mongosh` or MongoDB Compass
+## 6. The five queries
 
-1. **Using mongosh:**
-   ```bash
-   mongosh --file portfolio-4-nosql/Ajeyomi_Adedoyin_20260520_MongoDB_Queries.js
-   ```
-2. **Using MongoDB Compass:**
-   - Connect to `mongodb://localhost:27017`.
-   - Open database `adedoyin_mobility_nosql`.
-   - Inspect the `vehicle_telemetry` and `parcel_tracking` collections, verify the `2dsphere` index, and test the aggregation pipelines.
+The script also runs five business queries. Their real results are in the results file.
+
+1. Vehicles within 80 km of Abuja Utako, nearest first (geospatial `$nearSphere`).
+2. The fastest speeding events above the 100 km/h limit.
+3. The full audit trail of one parcel, waybill AML-WB-2026-00002, with all its checkpoints.
+4. Parcel scans per station and status, using an aggregation pipeline (`$unwind`, `$group`, `$sort`).
+5. A telemetry summary for each corridor: pings, average speed, top speed and speeding pings.
+
+## 7. Auto-expiry of old data (TTL index)
+
+Old GPS pings are not worth keeping forever, so MongoDB can delete them by itself with a TTL index. I did not put a TTL index on the real telemetry, because that data is from June to September 2026 and MongoDB would delete all of it at once. Instead I tested it on a small separate collection, where documents expire 30 seconds after `recorded_at`:
+
+- I inserted 3 documents: two already old, and one that was not yet old enough to expire.
+- Before waiting: 3 documents.
+- After waiting 80 seconds: 1 document. Only the one that was not yet old enough was left.
+
+In real use I would set the expiry to a longer time, for example 30 days.
+
+## 8. What I learned
+
+- A document database stores what is read together in one place. One read gives a parcel's whole history.
+- Indexes matter just as much in MongoDB as in PostgreSQL. Without them, every query reads every document.
+- A geospatial index lets one query find vehicles near a place.
+- Validation rules keep a flexible database tidy.
+- A document database is not a replacement for PostgreSQL here. Seats and money stay in PostgreSQL where they have strict rules.
+
+## 9. How to run it again
+
+1. Install MongoDB and mongosh, and make sure MongoDB is running on the normal port 27017.
+2. Open PowerShell in the repository folder and run:
+
+       mongosh --quiet --file portfolio-4-nosql\Ajeyomi_Adedoyin_20260520_MongoDB_Queries.js > portfolio-4-nosql\Ajeyomi_Adedoyin_20260520_NoSQL_Execution_Results.txt
+
+   It takes about one and a half minutes, because the TTL test waits 80 seconds.
+3. To make the data files again, run `python data\Ajeyomi_Adedoyin_20260520_NoSQL_Data_Generator.py`.
+4. To look at the collections, open MongoDB Compass, connect to `mongodb://localhost:27017` and open the database `adedoyin_mobility_nosql`.
+
+## 10. Files
+
+- `Ajeyomi_Adedoyin_20260520_MongoDB_Queries.js`: the script (collections, loading, benchmarks, indexes, queries, TTL test).
+- `Ajeyomi_Adedoyin_20260520_NoSQL_Execution_Results.txt`: the real output.
+- `Ajeyomi_Adedoyin_20260520_NoSQL_Model.json`: the model with one example document of each collection.
+- `../data/vehicle_telemetry.json` and `../data/parcel_tracking.json`: the generated data.
+- `assets/Ajeyomi_Adedoyin_20260520_NoSQL_Document_Architecture.png`: the diagram.

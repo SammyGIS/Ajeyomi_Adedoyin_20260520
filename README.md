@@ -96,8 +96,9 @@ Ajeyomi_Adedoyin_20260520/
 │   ├── Ajeyomi_Adedoyin_20260520_Adedoyin_Mobility_Data.xlsx # Full multi-sheet Excel workbook
 │   ├── Ajeyomi_Adedoyin_20260520_Data_Generator.py           # Python synthetic data generator script
 │   ├── Ajeyomi_Adedoyin_20260520_NoSQL_Model.json            # Full NoSQL document database export
-│   ├── vehicle_telemetry.json                                # Standalone IoT GPS telemetry collection
-│   ├── parcel_tracking.json                                  # Standalone express parcel tracking collection
+│   ├── Ajeyomi_Adedoyin_20260520_NoSQL_Data_Generator.py     # Builds the MongoDB data from the SQL dataset
+│   ├── vehicle_telemetry.json                                # 23,802 GPS pings for MongoDB
+│   ├── parcel_tracking.json                                  # 3,500 parcel documents for MongoDB
 │   └── *.csv (stations, vehicles, drivers, customers, routes, trips, bookings, parcels)
 │
 ├── Ajeyomi_Adedoyin_20260520_LMS_Documentation.docx  # 2-3 page summary document for LMS submission
@@ -114,7 +115,7 @@ Ajeyomi_Adedoyin_20260520/
 | **Portfolio 1** | [Database Design & Modelling](portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_README.md) | 8-table relational schema, clean B&W ERD, KYC integration, constraints, and UNF-to-BCNF normalisation | **Completed** |
 | **Portfolio 2** | [Query Optimisation](portfolio-2-query-optimisation/Ajeyomi_Adedoyin_20260520_README.md) | Query execution plans (`EXPLAIN ANALYZE`), B-tree & composite indexes, 4.8x to 65.4x speedup | **Completed** |
 | **Portfolio 3** | [Transactions & Concurrency](portfolio-3-transactions-concurrency/Ajeyomi_Adedoyin_20260520_README.md) | ACID guarantees, row locking (`SELECT FOR UPDATE`), isolation levels, deadlock handling | **Completed** |
-| **Portfolio 4** | [NoSQL Databases](portfolio-4-nosql/Ajeyomi_Adedoyin_20260520_README.md) | BSON document store, 2dsphere geospatial dispatch, TTL auto-expiration, aggregation pipelines | **Completed** |
+| **Portfolio 4** | [NoSQL Databases](portfolio-4-nosql/Ajeyomi_Adedoyin_20260520_README.md) | Document store generated from the SQL data, 2dsphere geospatial index, measured index speedups, TTL demo, aggregation pipelines | **Completed** |
 | **Portfolio 5** | [Distributed & Cloud Databases](portfolio-5-distributed-cloud/Ajeyomi_Adedoyin_20260520_README.md) | Corridor sharding, partition pruning, synchronous WAL streaming, Patroni HA automatic failover | **Completed** |
 
 ---
@@ -159,10 +160,11 @@ These figures are real `EXPLAIN (ANALYZE, BUFFERS)` output from PostgreSQL 17.5.
 - **Deadlock Detection & Resolution:** Tested circular lock dependencies between vehicle updates, observing PostgreSQL's automatic cycle detection and abort mechanism within 1000ms.
 
 ### 5.4 Portfolio 4: NoSQL Databases (Document Data Store)
-- **Document Data Model:** Implemented MongoDB BSON collections for high-frequency IoT fleet telemetry and parcel milestone tracking.
-- **Geospatial & Time-Series Indexing:** Configured `2dsphere` spherical indexes for dispatch proximity (< 80 km from hubs), compound B-tree indexes for time-series queries, and 30-day Time-To-Live (TTL) automated data expiration.
-- **Aggregation Pipelines:** Built analytical pipelines unwinding nested checkpoints for station throughput and rolling up fuel/speed metrics across highway corridors.
-- **Polyglot Persistence:** Established an enterprise architecture combining PostgreSQL (for ACID bookings and financial ledger) and MongoDB (for IoT telemetry and flexible cargo tracking).
+- **Document Data Model:** MongoDB collections for GPS telemetry (23,802 pings) and parcel tracking (3,500 parcels), generated from the real SQL dataset so both databases describe the same company.
+- **Validation and Indexes:** JSON Schema validation (a bad waybill number is refused), a `2dsphere` index for vehicles near a place, and compound and unique indexes. Four queries were measured before and after indexing with `explain("executionStats")`: full scans of 23,802 documents became index scans of between 1 and 2,762 documents.
+- **Aggregation Pipelines:** Parcel scans per station and a telemetry summary per corridor.
+- **TTL Expiry:** Shown on a separate demo collection (3 documents became 1 after 80 seconds).
+- **Polyglot Persistence:** PostgreSQL keeps bookings and money, and MongoDB keeps GPS pings and parcel history.
 
 ### 5.5 Portfolio 5: Distributed & Cloud Databases
 - **Corridor Sharding & Pruning:** Implemented declarative `LIST` partitioning on `origin_region`, pruning unused regional tables and slashing query buffer reads from 12 blocks down to 2 blocks.

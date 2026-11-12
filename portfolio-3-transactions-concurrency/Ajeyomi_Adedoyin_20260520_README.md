@@ -28,6 +28,10 @@ To test two people acting at the same time, I wrote a PowerShell script. It star
 
 The script is `Ajeyomi_Adedoyin_20260520_Run_Concurrency_Tests.ps1` and the output is `Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt`.
 
+Screenshot of the final run of the script in PowerShell, with all scenarios finishing and the results file written:
+
+![Concurrency test run in PowerShell](assets/Ajeyomi_Adedoyin_20260520_Concurrency_Test_Run.png)
+
 ## 3. The four ACID rules
 
 - Atomicity means all or nothing. A booking is fully saved or fully cancelled.

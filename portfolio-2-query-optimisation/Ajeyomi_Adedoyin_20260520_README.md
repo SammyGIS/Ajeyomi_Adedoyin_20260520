@@ -138,6 +138,26 @@ While indexes dramatically speed up read operations (`SELECT`), they introduce t
 
 ---
 
+## 6.1 Terminal screenshots of the benchmark setup
+
+Creating the benchmark database and the tables:
+
+![Create database and schema](assets/Ajeyomi_Adedoyin_20260520_Terminal_Create_Database_And_Schema.png)
+
+Loading the real data (1,200 trips, 8,000 bookings, 3,500 parcels):
+
+![Load data](assets/Ajeyomi_Adedoyin_20260520_Terminal_Load_Data.png)
+
+Scaling the data up to 60,000 trips, 400,000 bookings and 175,000 parcels:
+
+![Scale up](assets/Ajeyomi_Adedoyin_20260520_Terminal_Scale_Up.png)
+
+Running the queries and saving the execution plans:
+
+![Run benchmark](assets/Ajeyomi_Adedoyin_20260520_Terminal_Run_Benchmark.png)
+
+---
+
 ## 7. How to Reproduce the Benchmark
 
 Run the commands from the repository root in PowerShell (change `-p 5433` to your PostgreSQL port, normally `5432`). Set the password first with `$env:PGPASSWORD`.
