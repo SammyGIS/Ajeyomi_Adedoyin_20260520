@@ -5,7 +5,7 @@
 -- memory pages, so PostgreSQL always chooses a sequential scan and indexes show
 -- no benefit. This script copies the real records 49 more times (50 copies in
 -- total) so index effects can be measured honestly. Each copy has new primary
--- keys, new unique references and dates shifted by 120 days.
+-- keys, new unique references and trip dates shifted by 120 days.
 
 BEGIN;
 
@@ -29,7 +29,7 @@ SELECT b.booking_id + 8000 * g,
        b.ticket_amount,
        b.booking_status,
        b.payment_reference || '-' || g,
-       b.booking_timestamp + g * INTERVAL '120 days'
+       b.booking_timestamp + g * INTERVAL '1 second'
 FROM bookings b
 CROSS JOIN generate_series(1, 49) AS g
 WHERE b.booking_id <= 8000;
@@ -45,7 +45,7 @@ SELECT p.parcel_id + 3500 * g,
        p.weight_kg,
        p.declared_value,
        p.delivery_status,
-       p.created_at + g * INTERVAL '120 days'
+       p.created_at + g * INTERVAL '1 second'
 FROM parcels p
 CROSS JOIN generate_series(1, 49) AS g
 WHERE p.parcel_id <= 3500;

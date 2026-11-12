@@ -22,20 +22,20 @@ DROP INDEX IF EXISTS idx_opt_bookings_trip_status;
 DROP INDEX IF EXISTS idx_opt_parcels_sender;
 ANALYZE;
 
-\echo ================================================================================
-\echo ENVIRONMENT
-\echo ================================================================================
+\qecho ================================================================================
+\qecho ENVIRONMENT
+\qecho ================================================================================
 SELECT version();
 SELECT 'trips' AS table_name, COUNT(*) AS row_count FROM trips
 UNION ALL SELECT 'bookings', COUNT(*) FROM bookings
 UNION ALL SELECT 'parcels',  COUNT(*) FROM parcels;
 
-\echo
-\echo ================================================================================
-\echo QUERY RESULTS (first rows)
-\echo ================================================================================
-\echo
-\echo QUERY 1: Route Revenue and Seat Booking Analysis
+\qecho
+\qecho ================================================================================
+\qecho QUERY RESULTS (first rows)
+\qecho ================================================================================
+\qecho
+\qecho QUERY 1: Route Revenue and Seat Booking Analysis
 -- Management report: ticket revenue per travel corridor for completed trips in July 2026.
 SELECT
     r.route_id,
@@ -55,8 +55,8 @@ WHERE t.trip_status = 'Completed'
   AND b.booking_status = 'Confirmed'
 GROUP BY r.route_id, s_orig.station_name, s_dest.station_name
 ORDER BY total_revenue_ngn DESC;
-\echo
-\echo QUERY 2: Weekly Trip and Vehicle Dispatch Register
+\qecho
+\qecho QUERY 2: Weekly Trip and Vehicle Dispatch Register
 -- Dispatch officers check the trips, vehicles and drivers on one route for one week.
 SELECT
     t.trip_id,
@@ -78,8 +78,8 @@ WHERE t.route_id = 1
   AND t.departure_datetime >= '2026-07-06'
   AND t.departure_datetime <  '2026-07-13'
 ORDER BY t.departure_datetime;
-\echo
-\echo QUERY 3: Customer Parcel Tracking by Sender Phone Number
+\qecho
+\qecho QUERY 3: Customer Parcel Tracking by Sender Phone Number
 -- Customer care desk looks up every parcel sent by one customer.
 SELECT
     p.waybill_number,
@@ -96,8 +96,8 @@ JOIN parcels p ON p.sender_customer_id = c.customer_id
 WHERE c.phone_number = '08171070189'
 ORDER BY p.created_at DESC
 LIMIT 10;
-\echo
-\echo QUERY 4: Driver Performance and Trip Workload for August 2026
+\qecho
+\qecho QUERY 4: Driver Performance and Trip Workload for August 2026
 -- Supervisor report: completed trips and confirmed passengers per driver.
 SELECT
     d.driver_id,
@@ -114,12 +114,12 @@ WHERE t.trip_status = 'Completed'
   AND t.departure_datetime <  '2026-09-01'
 GROUP BY d.driver_id, d.full_name, d.license_number, d.status
 ORDER BY completed_trips_count DESC, total_passengers_carried DESC;
-\echo
-\echo ================================================================================
-\echo BASELINE EXECUTION PLANS (no optimisation indexes)
-\echo ================================================================================
-\echo
-\echo [BASELINE] QUERY 1: Route Revenue and Seat Booking Analysis
+\qecho
+\qecho ================================================================================
+\qecho BASELINE EXECUTION PLANS (no optimisation indexes)
+\qecho ================================================================================
+\qecho
+\qecho [BASELINE] QUERY 1: Route Revenue and Seat Booking Analysis
 -- warm-up run so the recorded plan reflects cached data
 SELECT COUNT(*) AS warm_up_rows FROM (
 SELECT
@@ -160,8 +160,8 @@ WHERE t.trip_status = 'Completed'
   AND b.booking_status = 'Confirmed'
 GROUP BY r.route_id, s_orig.station_name, s_dest.station_name
 ORDER BY total_revenue_ngn DESC;
-\echo
-\echo [BASELINE] QUERY 2: Weekly Trip and Vehicle Dispatch Register
+\qecho
+\qecho [BASELINE] QUERY 2: Weekly Trip and Vehicle Dispatch Register
 -- warm-up run so the recorded plan reflects cached data
 SELECT COUNT(*) AS warm_up_rows FROM (
 SELECT
@@ -206,8 +206,8 @@ WHERE t.route_id = 1
   AND t.departure_datetime >= '2026-07-06'
   AND t.departure_datetime <  '2026-07-13'
 ORDER BY t.departure_datetime;
-\echo
-\echo [BASELINE] QUERY 3: Customer Parcel Tracking by Sender Phone Number
+\qecho
+\qecho [BASELINE] QUERY 3: Customer Parcel Tracking by Sender Phone Number
 -- warm-up run so the recorded plan reflects cached data
 SELECT COUNT(*) AS warm_up_rows FROM (
 SELECT
@@ -240,8 +240,8 @@ FROM customers c
 JOIN parcels p ON p.sender_customer_id = c.customer_id
 WHERE c.phone_number = '08171070189'
 ORDER BY p.created_at DESC;
-\echo
-\echo [BASELINE] QUERY 4: Driver Performance and Trip Workload for August 2026
+\qecho
+\qecho [BASELINE] QUERY 4: Driver Performance and Trip Workload for August 2026
 -- warm-up run so the recorded plan reflects cached data
 SELECT COUNT(*) AS warm_up_rows FROM (
 SELECT
@@ -276,10 +276,10 @@ WHERE t.trip_status = 'Completed'
   AND t.departure_datetime <  '2026-09-01'
 GROUP BY d.driver_id, d.full_name, d.license_number, d.status
 ORDER BY completed_trips_count DESC, total_passengers_carried DESC;
-\echo
-\echo ================================================================================
-\echo CREATING OPTIMISATION INDEXES
-\echo ================================================================================
+\qecho
+\qecho ================================================================================
+\qecho CREATING OPTIMISATION INDEXES
+\qecho ================================================================================
 -- Queries 1 and 4: filter completed trips by date range without scanning every trip.
 CREATE INDEX idx_opt_trips_status_departure
     ON trips (trip_status, departure_datetime) INCLUDE (route_id, driver_id);
@@ -298,11 +298,11 @@ CREATE INDEX idx_opt_parcels_sender
 
 ANALYZE;
 
-\echo ================================================================================
-\echo OPTIMISED EXECUTION PLANS (with optimisation indexes)
-\echo ================================================================================
-\echo
-\echo [OPTIMISED] QUERY 1: Route Revenue and Seat Booking Analysis
+\qecho ================================================================================
+\qecho OPTIMISED EXECUTION PLANS (with optimisation indexes)
+\qecho ================================================================================
+\qecho
+\qecho [OPTIMISED] QUERY 1: Route Revenue and Seat Booking Analysis
 -- warm-up run so the recorded plan reflects cached data
 SELECT COUNT(*) AS warm_up_rows FROM (
 SELECT
@@ -343,8 +343,8 @@ WHERE t.trip_status = 'Completed'
   AND b.booking_status = 'Confirmed'
 GROUP BY r.route_id, s_orig.station_name, s_dest.station_name
 ORDER BY total_revenue_ngn DESC;
-\echo
-\echo [OPTIMISED] QUERY 2: Weekly Trip and Vehicle Dispatch Register
+\qecho
+\qecho [OPTIMISED] QUERY 2: Weekly Trip and Vehicle Dispatch Register
 -- warm-up run so the recorded plan reflects cached data
 SELECT COUNT(*) AS warm_up_rows FROM (
 SELECT
@@ -389,8 +389,8 @@ WHERE t.route_id = 1
   AND t.departure_datetime >= '2026-07-06'
   AND t.departure_datetime <  '2026-07-13'
 ORDER BY t.departure_datetime;
-\echo
-\echo [OPTIMISED] QUERY 3: Customer Parcel Tracking by Sender Phone Number
+\qecho
+\qecho [OPTIMISED] QUERY 3: Customer Parcel Tracking by Sender Phone Number
 -- warm-up run so the recorded plan reflects cached data
 SELECT COUNT(*) AS warm_up_rows FROM (
 SELECT
@@ -423,8 +423,8 @@ FROM customers c
 JOIN parcels p ON p.sender_customer_id = c.customer_id
 WHERE c.phone_number = '08171070189'
 ORDER BY p.created_at DESC;
-\echo
-\echo [OPTIMISED] QUERY 4: Driver Performance and Trip Workload for August 2026
+\qecho
+\qecho [OPTIMISED] QUERY 4: Driver Performance and Trip Workload for August 2026
 -- warm-up run so the recorded plan reflects cached data
 SELECT COUNT(*) AS warm_up_rows FROM (
 SELECT
