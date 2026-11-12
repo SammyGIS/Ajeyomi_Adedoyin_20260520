@@ -195,16 +195,8 @@ These figures are real `EXPLAIN (ANALYZE, BUFFERS)` output from PostgreSQL 17.5.
 
 ---
 
-## 7. Academic Integrity & AI Use Declaration
+## 7. AI Use Declaration
 
-This portfolio was developed in full compliance with MIVA Open University's academic integrity guidelines:
+I used AI assistants (Google Antigravity with Gemini, and Claude) to help with ideas and planning, preparing the data, and writing, validating and debugging code.
 
-1. **AI Tools Used:** Generative AI assistant (Google Antigravity / Gemini) was utilised as an interactive learning aid and pair-programming assistant.
-2. **Purpose of Use:**
-   - Brainstorming realistic transport corridors, vehicle configurations, and KYC requirements in Nigeria.
-   - Assisting with synthetic data generation scripts, JSON document schemas, and formatting markdown tables.
-   - Reviewing query execution plan nodes, geospatial indexes, and high-availability Patroni directives.
-3. **Student Verification & Ownership:**
-   - Every SQL DDL schema, table relationship, constraint, and query was personally reviewed, tested, and validated for technical correctness.
-   - All execution plans, indexing strategies, NoSQL aggregation pipelines, and distributed sharding configurations were verified against standard database engine behavior.
-   - I am fully prepared to defend and explain all architectural choices, normalisation steps, and optimisation decisions during technical verification.
+I set up the software on my own computer, ran the scripts and tests, took the screenshots and checked the results, and I can explain all the work in this portfolio.
