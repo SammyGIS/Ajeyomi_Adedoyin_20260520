@@ -1,12 +1,3 @@
--- ==============================================================================
--- Portfolio 1: Relational Database Schema DDL
--- Organization: Adedoyin Mobility and Logistics
--- Student Name: Adedoyin Ajeyomi
--- Student ID:   20260520
--- Engine:       PostgreSQL 14+ (Standard ANSI SQL compatible)
--- Description:  8-Table Core Academic Schema with KYC and Dashboard Fields
--- ==============================================================================
-
 -- Clean up existing tables in reverse dependency order
 DROP TABLE IF EXISTS parcels CASCADE;
 DROP TABLE IF EXISTS bookings CASCADE;

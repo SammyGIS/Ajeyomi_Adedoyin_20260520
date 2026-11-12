@@ -1,11 +1,3 @@
--- ==============================================================================
--- SQL Data Loading Script (PostgreSQL COPY)
--- Organization: Adedoyin Mobility and Logistics
--- Student Name: Adedoyin Ajeyomi
--- Student ID:   20260520
--- Description:  Copies operational CSV data from data/ directory into the 8 tables
--- ==============================================================================
-
 -- Stations
 \copy stations(station_id, station_name, state, address, contact_phone, manager_name) FROM 'data/stations.csv' WITH (FORMAT csv, HEADER true);
 
