@@ -112,7 +112,7 @@ Ajeyomi_Adedoyin_20260520/
 | Module | Title | Key Deliverables | Status |
 | :--- | :--- | :--- | :---: |
 | **Portfolio 1** | [Database Design & Modelling](portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_README.md) | 8-table relational schema, clean B&W ERD, KYC integration, constraints, and UNF-to-BCNF normalisation | **Completed** |
-| **Portfolio 2** | [Query Optimisation](portfolio-2-query-optimisation/Ajeyomi_Adedoyin_20260520_README.md) | Query execution plans (`EXPLAIN ANALYZE`), B-tree & composite indexes, 6.5x–12.8x speedup | **Completed** |
+| **Portfolio 2** | [Query Optimisation](portfolio-2-query-optimisation/Ajeyomi_Adedoyin_20260520_README.md) | Query execution plans (`EXPLAIN ANALYZE`), B-tree & composite indexes, 4.8x to 65.4x speedup | **Completed** |
 | **Portfolio 3** | [Transactions & Concurrency](portfolio-3-transactions-concurrency/Ajeyomi_Adedoyin_20260520_README.md) | ACID guarantees, row locking (`SELECT FOR UPDATE`), isolation levels, deadlock handling | **Completed** |
 | **Portfolio 4** | [NoSQL Databases](portfolio-4-nosql/Ajeyomi_Adedoyin_20260520_README.md) | BSON document store, 2dsphere geospatial dispatch, TTL auto-expiration, aggregation pipelines | **Completed** |
 | **Portfolio 5** | [Distributed & Cloud Databases](portfolio-5-distributed-cloud/Ajeyomi_Adedoyin_20260520_README.md) | Corridor sharding, partition pruning, synchronous WAL streaming, Patroni HA automatic failover | **Completed** |
@@ -133,22 +133,24 @@ Ajeyomi_Adedoyin_20260520/
 ### 5.2 Portfolio 2: Query Processing & Optimisation
 - **Core Business Queries:** Implemented four operational SQL queries:
   1. *Route Revenue Report:* Calculates total passenger income per interstate corridor.
-  2. *Daily Trip Dispatch:* Lists upcoming scheduled and boarding trips for station managers.
-  3. *Customer Parcel Tracking:* Looks up active packages by sender phone number or waybill status.
+  2. *Weekly Trip and Vehicle Dispatch Register:* Lists the trips, vehicles and drivers on one route for one week.
+  3. *Customer Parcel Tracking:* Looks up every parcel sent by a customer using the sender's phone number.
   4. *Driver Performance:* Summarizes trips completed and passengers carried per driver.
 - **Query Analysis with `EXPLAIN (ANALYZE, BUFFERS)`:**
   - Captured baseline plans showing high-cost **Sequential Scans** (`Seq Scan`) across large tables.
   - Designed targeted B-tree composite and covering indexes (`INCLUDE` clause).
   - Re-benchmarked queries to verify the switch to **Index Scans** and **Bitmap Index Scans**.
 
-#### **Portfolio 2 Benchmark Summary:**
+#### **Portfolio 2 Benchmark Summary (scaled test database: 60,000 trips, 400,000 bookings, 175,000 parcels):**
 
 | Query Description | Baseline Time | Optimised Time | Speedup Factor | Buffers Read (Before $\rightarrow$ After) |
 | :--- | :---: | :---: | :---: | :---: |
-| **Query 1: Route Revenue** | 18.52 ms | 2.18 ms | **8.5x Faster** | 82 $\rightarrow$ 18 blocks |
-| **Query 2: Trip Dispatch** | 5.89 ms | 0.46 ms | **12.8x Faster** | 36 $\rightarrow$ 14 blocks |
-| **Query 3: Parcel Tracking** | 7.28 ms | 0.97 ms | **7.5x Faster** | 48 $\rightarrow$ 16 blocks |
-| **Query 4: Driver Workload** | 22.75 ms | 3.49 ms | **6.5x Faster** | 114 $\rightarrow$ 28 blocks |
+| **Query 1: Route Revenue** | 7.61 ms | 1.30 ms | **5.8x Faster** | 1,550 $\rightarrow$ 949 pages |
+| **Query 2: Weekly Dispatch** | 5.36 ms | 0.10 ms | **51.1x Faster** | 624 $\rightarrow$ 10 pages |
+| **Query 3: Parcel Tracking** | 20.41 ms | 0.31 ms | **65.4x Faster** | 2,871 $\rightarrow$ 406 pages |
+| **Query 4: Driver Workload** | 6.39 ms | 1.32 ms | **4.8x Faster** | 1,538 $\rightarrow$ 934 pages |
+
+These figures are real `EXPLAIN (ANALYZE, BUFFERS)` output from PostgreSQL 17.5. The real dataset was copied 50 times into a separate benchmark database because the original tables are too small for the planner to use indexes. See the Portfolio 2 README for the method.
 
 ### 5.3 Portfolio 3: Transactions & Concurrency Control
 - **ACID Demonstrations:** Tested full atomic seat reservations with `COMMIT` upon payment confirmation and automatic clean reversion with `ROLLBACK` on transaction failure.
