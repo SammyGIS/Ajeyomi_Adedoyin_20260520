@@ -126,6 +126,10 @@ The vehicle_telemetry collection (23,802 pings). One vehicle's pings for one wee
 
 ![Weekly query on vehicle_telemetry](assets/Ajeyomi_Adedoyin_20260520_Compass_Telemetry_Weekly_Query.png)
 
+The explain plan for the same query in Compass. It uses an index scan (IXSCAN) on `idx_telemetry_vehicle_time`, examines only the 88 documents it returns, and takes 0 ms. Without the index, the script's baseline had to read all 23,802 documents.
+
+![Explain plan in Compass](assets/Ajeyomi_Adedoyin_20260520_Compass_Telemetry_Explain_Plan.png)
+
 ## 10. How to run it again
 
 1. Install MongoDB and mongosh, and make sure MongoDB is running on the normal port 27017.
