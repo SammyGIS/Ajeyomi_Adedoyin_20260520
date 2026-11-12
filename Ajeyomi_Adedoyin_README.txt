@@ -92,7 +92,7 @@ The cloud design (servers in Lagos, Abuja and Kano, Patroni and etcd for automat
 Design choices: I kept money and seats in PostgreSQL because they need strict rules, and I put GPS pings and parcel history in MongoDB because they change shape and arrive all the time. I split trips by region because most work is for one region at a time.
 
 Challenges:
-- I had no real company data, so I generated all of it myself with a Python script and the Faker library. It was hard to make fake data that looks real for Nigeria and also follows every database rule (11 digit NINs, unique phone numbers and plates, one booking per seat, correct dates and prices). I used my own lists of Nigerian names, stations and routes, and I fixed the data whenever the database refused it.
+- I generated all of it myself with a Python script and the Faker library. It was hard to make fake data that looks real for Nigeria and also follows every database rule (11 digit NINs, unique phone numbers and plates, one booking per seat, correct dates and prices). I used my own lists of Nigerian names, stations and routes, and I fixed the data whenever the database refused it.
 - My data was too small to show index gains. I solved it with a scaled copy in a separate database and I say this clearly in the README.
 - Tests with two people at once need good timing. I had to change the delays in my script until the second session really collided with the first.
 - MongoDB refused my own generated data twice, for a wrong number type and a fuel level above 100. Fixing it taught me how validation works.
