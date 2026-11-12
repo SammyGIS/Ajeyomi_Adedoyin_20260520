@@ -23,7 +23,7 @@ If two passengers try to reserve the same seat simultaneously, or if a payment f
 Every reliable relational database guarantees four properties known as **ACID**:
 
 1. **Atomicity ("All or Nothing"):**  
-   All steps of a booking must complete successfully (checking availability $\rightarrow$ debiting customer $\rightarrow$ recording ticket). If any step fails, the entire transaction is rolled back with `ROLLBACK`, leaving no partial changes.
+   All steps of a booking must complete successfully (checking availability → debiting customer → recording ticket). If any step fails, the entire transaction is rolled back with `ROLLBACK`, leaving no partial changes.
 2. **Consistency (Preserving Business Rules):**  
    The database starts in a valid state and ends in a valid state. For example, our unique constraint on `(trip_id, seat_number)` and check constraint on ticket prices are strictly enforced at all times.
 3. **Isolation (Separation of Concurrent Work):**  

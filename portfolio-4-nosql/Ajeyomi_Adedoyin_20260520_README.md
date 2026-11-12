@@ -124,7 +124,7 @@ Seven targeted indexes were established to guarantee sub-millisecond lookups:
    Automatically purges raw IoT pings older than 30 days to optimize storage.
 5. **Unique B-Tree Waybill Index:**
    `db.parcel_tracking.createIndex({ waybill_number: 1 }, { unique: true });`  
-   Guarantees $O(\log N)$ single-document lookups by tracking number.
+   Guarantees O(log N) single-document lookups by tracking number.
 6. **Multikey Checkpoints Index:**
    `db.parcel_tracking.createIndex({ "checkpoints.status": 1, "checkpoints.station": 1 });`  
    Indexes nested array elements for tracking packages currently at specific stations.
@@ -142,15 +142,15 @@ All scripts are in [`Ajeyomi_Adedoyin_20260520_MongoDB_Queries.js`](Ajeyomi_Aded
 - **Query 1 (Geospatial Proximity):** Finds all vehicles within 80 km of Abuja Utako Hub using `$nearSphere`.
 - **Query 2 (Fleet Safety Audit):** Identifies vehicles exceeding the statutory 100 km/h FRSC speed limit.
 - **Query 3 (Parcel Audit Trail):** Retrieves full chain-of-custody checkpoints for waybill `AML-WB-2026-0002`.
-- **Query 4 (Terminal Throughput):** Aggregation pipeline (`$unwind` $\rightarrow$ `$group` $\rightarrow$ `$project` $\rightarrow$ `$sort`) auditing processed packages per terminal.
+- **Query 4 (Terminal Throughput):** Aggregation pipeline (`$unwind` → `$group` → `$project` → `$sort`) auditing processed packages per terminal.
 - **Query 5 (Corridor Fleet Metrics):** Aggregation pipeline rolling up average speed, max speed, and fuel drawdown by route corridor.
 
 ### Performance Benchmark Results (`explain("executionStats")`):
 
 | Query | Index Used | Unindexed Stage | Optimised Stage | Baseline Time | Optimised Time | Speedup Factor |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Q1: Geospatial Proximity** | `idx_telemetry_2dsphere_location` | `COLLSCAN` | `GEO_NEAR_2DSPHERE` | 4.82 ms | 0.41 ms | **11.7x Faster** |
-| **Q3: Waybill Lookup** | `idx_parcel_waybill_unique` | `COLLSCAN` | `IXSCAN` | 2.15 ms | 0.18 ms | **11.9x Faster** |
+| **Q1: Geospatial Proximity** | `idx_telemetry_2dsphere_location` | `COLLSCAN` | `GEO_NEAR_2DSPHERE` | 4.82 ms | 0.41 ms | 11.7x |
+| **Q3: Waybill Lookup** | `idx_parcel_waybill_unique` | `COLLSCAN` | `IXSCAN` | 2.15 ms | 0.18 ms | 11.9x |
 
 ---
 

@@ -156,15 +156,15 @@ When an agent books a ticket and issues `COMMIT`:
 3. The standby writes the WAL record to its operating system cache and sends an acknowledgement back.
 4. The client receives success.
 
-This guarantees **Zero Data Loss** ($\text{RPO} = 0$) even if the primary host loses physical power immediately after commit.
+This guarantees **Zero Data Loss** (RPO = 0) even if the primary host loses physical power immediately after commit.
 
 ---
 
 ## 4. High Availability (HA) & Automated Failover
 
 In enterprise database administration, disaster recovery is measured by two metrics:
-- **Recovery Point Objective (RPO):** The maximum tolerable data loss measured in time. Our target: **$\text{RPO} = 0$ seconds**.
-- **Recovery Time Objective (RTO):** The maximum allowable duration of system downtime. Our target: **$\text{RTO} \le 10$ seconds**.
+- **Recovery Point Objective (RPO):** The maximum tolerable data loss measured in time. Our target: **RPO = 0 seconds**.
+- **Recovery Time Objective (RTO):** The maximum allowable duration of system downtime. Our target: **RTO ≤ 10 seconds**.
 
 ### 4.1 Automated Failover with Patroni and etcd
 

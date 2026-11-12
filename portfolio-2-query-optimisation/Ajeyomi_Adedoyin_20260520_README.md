@@ -107,17 +107,21 @@ Queries 1 and 4 read `ticket_amount` and `booking_status` for every booking of t
 
 ![Query Execution Time Before vs After Indexing](assets/Ajeyomi_Adedoyin_20260520_Query_Performance_Comparison.png)
 
-| Query | Baseline Time | Optimised Time | Speedup | Baseline Cost | Optimised Cost | Buffers Read (Before $\rightarrow$ After) |
+| Query | Baseline Time | Optimised Time | Speedup | Baseline Cost | Optimised Cost | Buffers Read (Before → After) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Query 1: Route Revenue** | 7.61 ms | 1.30 ms | **5.8x Faster** | 6510.48 | 4761.85 | 1,550 $\rightarrow$ 949 pages |
-| **Query 2: Weekly Dispatch** | 5.36 ms | 0.10 ms | **51.1x Faster** | 1680.23 | 36.88 | 624 $\rightarrow$ 10 pages |
-| **Query 3: Parcel Tracking** | 20.41 ms | 0.31 ms | **65.4x Faster** | 5105.24 | 1023.15 | 2,871 $\rightarrow$ 406 pages |
-| **Query 4: Driver Workload** | 6.39 ms | 1.32 ms | **4.8x Faster** | 6190.24 | 4734.20 | 1,538 $\rightarrow$ 934 pages |
+| **Query 1: Route Revenue** | 7.61 ms | 1.30 ms | 5.8x | 6510.48 | 4761.85 | 1,550 → 949 pages |
+| **Query 2: Weekly Dispatch** | 5.36 ms | 0.10 ms | 51.1x | 1680.23 | 36.88 | 624 → 10 pages |
+| **Query 3: Parcel Tracking** | 20.41 ms | 0.31 ms | 65.4x | 5105.24 | 1023.15 | 2,871 → 406 pages |
+| **Query 4: Driver Workload** | 6.39 ms | 1.32 ms | 4.8x | 6190.24 | 4734.20 | 1,538 → 934 pages |
 
 ### 5.2 What the plans show
 - **Query 2 and Query 3** gain the most (51.1x and 65.4x). Both look for a small group of rows in a very large table, so a `Seq Scan` over every row is replaced by a `Bitmap Index Scan` that touches only the matching pages (Query 2 drops from 624 to 10 buffer pages).
 - **Query 1 and Query 4** gain less (5.8x and 4.8x). They still need to read thousands of bookings to build the totals. The `Seq Scan on trips` becomes a `Bitmap Index Scan` on `idx_opt_trips_status_departure`, and the booking lookups use `idx_opt_bookings_trip_status`.
 - **Cost** is the planner's own estimate and it falls in every query, which agrees with the measured times.
+
+**Graphical plan in pgAdmin 4 (Query 2, with the index):** the flowchart shows `idx_opt_trips_route_departure` feeding the `trips` scan, followed by the joins to routes, stations, vehicles and drivers, and a final sort.
+
+![pgAdmin 4 graphical plan for Query 2 with the index](assets/Ajeyomi_Adedoyin_20260520_pgAdmin_Query2_Plan_Optimised.png)
 
 ### 5.3 Limits of these results
 Execution times vary a little from run to run (for example with background activity on the computer), so treat the milliseconds as indicative. The change in plan type and the drop in buffer pages are the stable evidence. The data is also a scaled copy of the real records, not production data.

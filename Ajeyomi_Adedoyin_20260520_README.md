@@ -143,12 +143,12 @@ Ajeyomi_Adedoyin_20260520/
 
 #### **Portfolio 2 Benchmark Summary (scaled test database: 60,000 trips, 400,000 bookings, 175,000 parcels):**
 
-| Query Description | Baseline Time | Optimised Time | Speedup Factor | Buffers Read (Before $\rightarrow$ After) |
+| Query Description | Baseline Time | Optimised Time | Speedup Factor | Buffers Read (Before → After) |
 | :--- | :---: | :---: | :---: | :---: |
-| **Query 1: Route Revenue** | 7.61 ms | 1.30 ms | **5.8x Faster** | 1,550 $\rightarrow$ 949 pages |
-| **Query 2: Weekly Dispatch** | 5.36 ms | 0.10 ms | **51.1x Faster** | 624 $\rightarrow$ 10 pages |
-| **Query 3: Parcel Tracking** | 20.41 ms | 0.31 ms | **65.4x Faster** | 2,871 $\rightarrow$ 406 pages |
-| **Query 4: Driver Workload** | 6.39 ms | 1.32 ms | **4.8x Faster** | 1,538 $\rightarrow$ 934 pages |
+| **Query 1: Route Revenue** | 7.61 ms | 1.30 ms | 5.8x | 1,550 → 949 pages |
+| **Query 2: Weekly Dispatch** | 5.36 ms | 0.10 ms | 51.1x | 624 → 10 pages |
+| **Query 3: Parcel Tracking** | 20.41 ms | 0.31 ms | 65.4x | 2,871 → 406 pages |
+| **Query 4: Driver Workload** | 6.39 ms | 1.32 ms | 4.8x | 1,538 → 934 pages |
 
 These figures are real `EXPLAIN (ANALYZE, BUFFERS)` output from PostgreSQL 17.5. The real dataset was copied 50 times into a separate benchmark database because the original tables are too small for the planner to use indexes. See the Portfolio 2 README for the method.
 
@@ -160,15 +160,15 @@ These figures are real `EXPLAIN (ANALYZE, BUFFERS)` output from PostgreSQL 17.5.
 
 ### 5.4 Portfolio 4: NoSQL Databases (Document Data Store)
 - **Document Data Model:** Implemented MongoDB BSON collections for high-frequency IoT fleet telemetry and parcel milestone tracking.
-- **Geospatial & Time-Series Indexing:** Configured `2dsphere` spherical indexes for dispatch proximity ($< 80\text{ km}$ from hubs), compound B-tree indexes for time-series queries, and 30-day Time-To-Live (TTL) automated data expiration.
+- **Geospatial & Time-Series Indexing:** Configured `2dsphere` spherical indexes for dispatch proximity (< 80 km from hubs), compound B-tree indexes for time-series queries, and 30-day Time-To-Live (TTL) automated data expiration.
 - **Aggregation Pipelines:** Built analytical pipelines unwinding nested checkpoints for station throughput and rolling up fuel/speed metrics across highway corridors.
 - **Polyglot Persistence:** Established an enterprise architecture combining PostgreSQL (for ACID bookings and financial ledger) and MongoDB (for IoT telemetry and flexible cargo tracking).
 
 ### 5.5 Portfolio 5: Distributed & Cloud Databases
 - **Corridor Sharding & Pruning:** Implemented declarative `LIST` partitioning on `origin_region`, pruning unused regional tables and slashing query buffer reads from 12 blocks down to 2 blocks.
 - **Multi-Node FDW Integration:** Prepared distributed foreign table routing using `postgres_fdw` across Lagos, Abuja, and Kano nodes.
-- **Synchronous Streaming Replication:** Designed WAL replication parameters (`synchronous_commit = remote_write`) ensuring zero data loss ($\text{RPO} = 0$).
-- **High Availability & Automated Failover:** Configured Patroni with etcd distributed consensus, achieving automatic leader promotion and virtual floating IP re-routing in under 10 seconds ($\text{RTO} \le 8\text{ s}$) with `pg_rewind` split-brain healing.
+- **Synchronous Streaming Replication:** Designed WAL replication parameters (`synchronous_commit = remote_write`) ensuring zero data loss (RPO = 0).
+- **High Availability & Automated Failover:** Configured Patroni with etcd distributed consensus, achieving automatic leader promotion and virtual floating IP re-routing in under 10 seconds (RTO ≤ 8 s) with `pg_rewind` split-brain healing.
 
 ---
 
