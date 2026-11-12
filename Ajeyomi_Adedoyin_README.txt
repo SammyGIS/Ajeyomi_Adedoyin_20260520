@@ -103,7 +103,7 @@ What I learned: indexes and partitions make queries read much less data. A lock 
 
 8. AI USE DECLARATION
 
-I used AI assistants (Google Antigravity with Gemini, and Claude) to help with ideas and planning, preparing the data, and writing, validating and debugging code.
+I used AI assistants (the Gemini chat app, and Claude) to help with ideas and planning, preparing the data, and writing, correcting and debugging code and errors.
 
 I set up the software on my own computer, ran the scripts and tests, took the screenshots and checked the results, and I can explain all the work in this portfolio.
 
