@@ -21,17 +21,17 @@
 -- ------------------------------------------------------------------------------
 BEGIN;
 
--- Step 1: Verify the trip is active and has not departed
+-- Verify the trip is active and has not departed
 SELECT trip_id, route_id, vehicle_id, trip_status 
 FROM trips 
 WHERE trip_id = 1 AND trip_status IN ('Scheduled', 'Boarding');
 
--- Step 2: Verify Seat 3 is not already booked
+-- Verify Seat 3 is not already booked
 SELECT booking_id 
 FROM bookings 
 WHERE trip_id = 1 AND seat_number = 3 AND booking_status <> 'Cancelled';
 
--- Step 3: Insert the confirmed passenger booking
+-- Insert the confirmed passenger booking
 INSERT INTO bookings (
     trip_id, 
     customer_id, 
@@ -48,7 +48,7 @@ INSERT INTO bookings (
     'PAY-TXN-2026-001'
 );
 
--- Step 4: Commit changes to persist permanently (Durability)
+-- Commit changes to persist permanently (Durability)
 COMMIT;
 
 -- Verify the booking exists
@@ -61,7 +61,7 @@ SELECT * FROM bookings WHERE payment_reference = 'PAY-TXN-2026-001';
 -- ------------------------------------------------------------------------------
 BEGIN;
 
--- Step 1: Insert provisional booking
+-- Insert provisional booking
 INSERT INTO bookings (
     trip_id, 
     customer_id, 
@@ -78,7 +78,7 @@ INSERT INTO bookings (
     'PAY-TXN-2026-FAILED'
 );
 
--- Step 2: External payment verification fails (Card declined or timeout).
+-- External payment verification fails (Card declined or timeout).
 -- We issue a ROLLBACK to revert all uncommitted changes.
 ROLLBACK;
 

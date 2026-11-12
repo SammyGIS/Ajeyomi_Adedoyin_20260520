@@ -10,10 +10,10 @@
 -- ==============================================================================
 
 -- Instructions:
--- 1. Run the base schema from Portfolio 1 first.
--- 2. Populate the tables using the seed data script.
--- 3. Execute the queries below with EXPLAIN ANALYZE to observe performance.
--- 4. Apply the indexes and re-run EXPLAIN ANALYZE to verify improvements.
+-- Run the base schema from Portfolio 1 first.
+-- Populate the tables using the seed data script.
+-- Execute the queries below with EXPLAIN ANALYZE to observe performance.
+-- Apply the indexes and re-run EXPLAIN ANALYZE to verify improvements.
 
 -- ==============================================================================
 -- QUERY 1: Route Revenue and Seat Booking Analysis
@@ -22,7 +22,7 @@
 -- Tables Involved: routes, stations (origin & destination), trips, bookings
 -- ==============================================================================
 
--- Step 1A: The Business Query
+-- The Business Query
 SELECT 
     r.route_id,
     s_orig.station_name AS origin_station,
@@ -39,7 +39,7 @@ WHERE b.booking_status IN ('Confirmed', 'Checked-In', 'Completed')
 GROUP BY r.route_id, s_orig.station_name, s_dest.station_name
 ORDER BY total_revenue_ngn DESC;
 
--- Step 1B: Baseline Execution Plan (Before Extra Optimisation)
+-- Baseline Execution Plan (Before Extra Optimisation)
 -- Notice the Sequential Scans across bookings and trips tables.
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT 
@@ -58,14 +58,14 @@ WHERE b.booking_status IN ('Confirmed', 'Checked-In', 'Completed')
 GROUP BY r.route_id, s_orig.station_name, s_dest.station_name
 ORDER BY total_revenue_ngn DESC;
 
--- Step 1C: Optimisation Strategy
+-- Optimisation Strategy
 -- Create a composite index on bookings covering trip_id and booking_status.
 -- This allows PostgreSQL to quickly filter valid tickets without scanning cancelled rows.
 CREATE INDEX IF NOT EXISTS idx_opt_bookings_trip_status 
 ON bookings (trip_id, booking_status) 
 INCLUDE (ticket_amount);
 
--- Step 1D: Optimised Execution Plan (After Indexing)
+-- Optimised Execution Plan (After Indexing)
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT 
     r.route_id,
@@ -91,7 +91,7 @@ ORDER BY total_revenue_ngn DESC;
 -- Tables Involved: trips, routes, vehicles, drivers, stations
 -- ==============================================================================
 
--- Step 2A: The Business Query
+-- The Business Query
 SELECT 
     t.trip_id,
     t.departure_datetime,
@@ -113,7 +113,7 @@ WHERE t.trip_status IN ('Scheduled', 'Boarding')
   AND t.departure_datetime <  '2026-10-08 00:00:00+01'
 ORDER BY t.departure_datetime ASC;
 
--- Step 2B: Baseline Execution Plan (Before Extra Optimisation)
+-- Baseline Execution Plan (Before Extra Optimisation)
 -- Filter requires scanning every row in trips to check status and datetime.
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT 
@@ -137,13 +137,13 @@ WHERE t.trip_status IN ('Scheduled', 'Boarding')
   AND t.departure_datetime <  '2026-10-08 00:00:00+01'
 ORDER BY t.departure_datetime ASC;
 
--- Step 2C: Optimisation Strategy
+-- Optimisation Strategy
 -- Create a composite B-tree index on trips (trip_status, departure_datetime).
 -- This lets the planner jump straight to upcoming scheduled trips.
 CREATE INDEX IF NOT EXISTS idx_opt_trips_status_datetime 
 ON trips (trip_status, departure_datetime);
 
--- Step 2D: Optimised Execution Plan (After Indexing)
+-- Optimised Execution Plan (After Indexing)
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT 
     t.trip_id,
@@ -174,7 +174,7 @@ ORDER BY t.departure_datetime ASC;
 -- Tables Involved: parcels, customers, trips, routes
 -- ==============================================================================
 
--- Step 3A: The Business Query
+-- The Business Query
 SELECT 
     p.waybill_number,
     p.delivery_status,
@@ -191,7 +191,7 @@ WHERE c.phone_number = '+2348031234567'
    OR p.delivery_status = 'In-Transit'
 ORDER BY p.created_at DESC;
 
--- Step 3B: Baseline Execution Plan (Before Extra Optimisation)
+-- Baseline Execution Plan (Before Extra Optimisation)
 -- Sequential Scan over parcels and customers without index on search keys.
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT 
@@ -210,16 +210,16 @@ WHERE c.phone_number = '+2348031234567'
    OR p.delivery_status = 'In-Transit'
 ORDER BY p.created_at DESC;
 
--- Step 3C: Optimisation Strategy
--- 1. Ensure customers.phone_number has a fast lookup B-tree index.
--- 2. Add an index on parcels (delivery_status, created_at) to speed up parcel status queries.
+-- Optimisation Strategy
+-- Ensure customers.phone_number has a fast lookup B-tree index.
+-- Add an index on parcels (delivery_status, created_at) to speed up parcel status queries.
 CREATE INDEX IF NOT EXISTS idx_opt_customers_phone 
 ON customers (phone_number);
 
 CREATE INDEX IF NOT EXISTS idx_opt_parcels_status_created 
 ON parcels (delivery_status, created_at DESC);
 
--- Step 3D: Optimised Execution Plan (After Indexing)
+-- Optimised Execution Plan (After Indexing)
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT 
     p.waybill_number,
@@ -245,7 +245,7 @@ ORDER BY p.created_at DESC;
 -- Tables Involved: drivers, trips, bookings
 -- ==============================================================================
 
--- Step 4A: The Business Query
+-- The Business Query
 SELECT 
     d.driver_id,
     d.full_name AS driver_name,
@@ -259,7 +259,7 @@ LEFT JOIN bookings b ON t.trip_id = b.trip_id AND b.booking_status IN ('Checked-
 GROUP BY d.driver_id, d.full_name, d.license_number, d.status
 ORDER BY completed_trips_count DESC, total_passengers_carried DESC;
 
--- Step 4B: Baseline Execution Plan (Before Extra Optimisation)
+-- Baseline Execution Plan (Before Extra Optimisation)
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT 
     d.driver_id,
@@ -274,13 +274,13 @@ LEFT JOIN bookings b ON t.trip_id = b.trip_id AND b.booking_status IN ('Checked-
 GROUP BY d.driver_id, d.full_name, d.license_number, d.status
 ORDER BY completed_trips_count DESC, total_passengers_carried DESC;
 
--- Step 4C: Optimisation Strategy
+-- Optimisation Strategy
 -- Add an index on trips (driver_id, trip_status) to speed up foreign key joins
 -- and status filtering without scanning all trips.
 CREATE INDEX IF NOT EXISTS idx_opt_trips_driver_status 
 ON trips (driver_id, trip_status);
 
--- Step 4D: Optimised Execution Plan (After Indexing)
+-- Optimised Execution Plan (After Indexing)
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT 
     d.driver_id,

@@ -18,7 +18,7 @@ DROP TABLE IF EXISTS vehicles CASCADE;
 DROP TABLE IF EXISTS stations CASCADE;
 
 -- ------------------------------------------------------------------------------
--- 1. STATIONS: 6 Regional Hubs across Nigeria
+-- STATIONS: 6 Regional Hubs across Nigeria
 -- ------------------------------------------------------------------------------
 CREATE TABLE stations (
     station_id          SERIAL PRIMARY KEY,
@@ -31,7 +31,7 @@ CREATE TABLE stations (
 );
 
 -- ------------------------------------------------------------------------------
--- 2. VEHICLES: Fleet of 20 Commercial Interstate Assets
+-- VEHICLES: Fleet of 20 Commercial Interstate Assets
 -- ------------------------------------------------------------------------------
 CREATE TABLE vehicles (
     vehicle_id              SERIAL PRIMARY KEY,
@@ -50,7 +50,7 @@ CREATE TABLE vehicles (
 );
 
 -- ------------------------------------------------------------------------------
--- 3. DRIVERS: Driver Bio-Data and Regulatory KYC
+-- DRIVERS: Driver Bio-Data and Regulatory KYC
 -- ------------------------------------------------------------------------------
 CREATE TABLE drivers (
     driver_id           SERIAL PRIMARY KEY,
@@ -68,7 +68,7 @@ CREATE TABLE drivers (
 );
 
 -- ------------------------------------------------------------------------------
--- 4. CUSTOMERS: Passengers and Parcel Senders with KYC
+-- CUSTOMERS: Passengers and Parcel Senders with KYC
 -- ------------------------------------------------------------------------------
 CREATE TABLE customers (
     customer_id             SERIAL PRIMARY KEY,
@@ -84,7 +84,7 @@ CREATE TABLE customers (
 );
 
 -- ------------------------------------------------------------------------------
--- 5. ROUTES: Interstate Corridors connecting Regional Stations
+-- ROUTES: Interstate Corridors connecting Regional Stations
 -- ------------------------------------------------------------------------------
 CREATE TABLE routes (
     route_id                SERIAL PRIMARY KEY,
@@ -104,7 +104,7 @@ CREATE TABLE routes (
 );
 
 -- ------------------------------------------------------------------------------
--- 6. TRIPS: Scheduled and Executed Interstate Journeys
+-- TRIPS: Scheduled and Executed Interstate Journeys
 -- ------------------------------------------------------------------------------
 CREATE TABLE trips (
     trip_id                 SERIAL PRIMARY KEY,
@@ -121,7 +121,7 @@ CREATE TABLE trips (
 );
 
 -- ------------------------------------------------------------------------------
--- 7. BOOKINGS: Seat Reservations & Manifest (Anti-Double Booking)
+-- BOOKINGS: Seat Reservations & Manifest (Anti-Double Booking)
 -- ------------------------------------------------------------------------------
 CREATE TABLE bookings (
     booking_id          SERIAL PRIMARY KEY,
@@ -139,7 +139,7 @@ CREATE TABLE bookings (
 );
 
 -- ------------------------------------------------------------------------------
--- 8. PARCELS: Waybill Logistics Cargo Tracking
+-- PARCELS: Waybill Logistics Cargo Tracking
 -- ------------------------------------------------------------------------------
 CREATE TABLE parcels (
     parcel_id           SERIAL PRIMARY KEY,

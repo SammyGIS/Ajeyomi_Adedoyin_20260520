@@ -94,12 +94,12 @@ Ajeyomi_Adedoyin_20260520/
 │
 ├── data/                                         # Central Data Repository (All data: CSV, XLSX, and JSON)
 │   ├── Ajeyomi_Adedoyin_20260520_Adedoyin_Mobility_Data.xlsx # Full multi-sheet Excel workbook
+│   ├── Ajeyomi_Adedoyin_20260520_Data_Generator.py           # Python synthetic data generator script
 │   ├── Ajeyomi_Adedoyin_20260520_NoSQL_Model.json            # Full NoSQL document database export
 │   ├── vehicle_telemetry.json                                # Standalone IoT GPS telemetry collection
 │   ├── parcel_tracking.json                                  # Standalone express parcel tracking collection
 │   └── *.csv (stations, vehicles, drivers, customers, routes, trips, bookings, parcels)
 │
-├── utils/                                        # Python synthetic data generator script
 ├── Ajeyomi_Adedoyin_20260520_LMS_Documentation.docx  # 2-3 page summary document for LMS submission
 ├── Ajeyomi_Adedoyin_20260520_README.md               # Main student portfolio overview
 └── README.md                                         # GitHub landing page overview

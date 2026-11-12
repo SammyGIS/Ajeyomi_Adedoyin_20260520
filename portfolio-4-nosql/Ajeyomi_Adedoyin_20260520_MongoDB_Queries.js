@@ -19,7 +19,7 @@
  */
 
 // ----------------------------------------------------------------------------
-// STEP 1: INITIALISE DATABASE AND SCHEMA VALIDATION
+// INITIALISE DATABASE AND SCHEMA VALIDATION
 // ----------------------------------------------------------------------------
 
 use adedoyin_mobility_nosql;
@@ -146,7 +146,7 @@ db.createCollection("parcel_tracking", {
 });
 
 // ----------------------------------------------------------------------------
-// STEP 2: INSERT SEED DATA
+// INSERT SEED DATA
 // ----------------------------------------------------------------------------
 
 db.vehicle_telemetry.insertMany([
@@ -551,7 +551,7 @@ db.parcel_tracking.insertMany([
 ]);
 
 // ----------------------------------------------------------------------------
-// STEP 3: CREATE SPECIALISED INDEXES
+// CREATE SPECIALISED INDEXES
 // ----------------------------------------------------------------------------
 
 // Index 1: 2dsphere index for spherical geospatial proximity queries
@@ -597,7 +597,7 @@ db.parcel_tracking.createIndex(
 );
 
 // ----------------------------------------------------------------------------
-// STEP 4: FIVE OPERATIONAL NOSQL QUERIES & AGGREGATION PIPELINES
+// FIVE OPERATIONAL NOSQL QUERIES & AGGREGATION PIPELINES
 // ----------------------------------------------------------------------------
 
 print("\n================================================================================");
@@ -757,7 +757,7 @@ printjson(fleetMetricsResults);
 
 
 // ----------------------------------------------------------------------------
-// STEP 5: PERFORMANCE BENCHMARKING WITH EXPLAIN("executionStats")
+// PERFORMANCE BENCHMARKING WITH EXPLAIN("executionStats")
 // ----------------------------------------------------------------------------
 
 print("\n================================================================================");

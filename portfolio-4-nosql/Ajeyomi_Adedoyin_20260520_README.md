@@ -8,7 +8,7 @@
 
 ---
 
-## 1. Executive Summary
+## 1. Introduction
 
 Relational databases (PostgreSQL) enforce strict ACID compliance for seat reservations and financial auditing. However, interstate logistics operations also generate high-frequency, semi-structured data:
 - **IoT Fleet Telemetry:** Continuous GPS pings (latitude, longitude, speed, fuel, engine metrics) every 30–60 seconds from 20 fleet vehicles.
@@ -138,7 +138,7 @@ Seven targeted indexes were established to guarantee sub-millisecond lookups:
 
 All scripts are in [`Ajeyomi_Adedoyin_20260520_MongoDB_Queries.js`](Ajeyomi_Adedoyin_20260520_MongoDB_Queries.js) and execution logs in [`Ajeyomi_Adedoyin_20260520_NoSQL_Execution_Results.txt`](Ajeyomi_Adedoyin_20260520_NoSQL_Execution_Results.txt).
 
-### Summary of Operational Queries:
+### Operational Queries:
 - **Query 1 (Geospatial Proximity):** Finds all vehicles within 80 km of Abuja Utako Hub using `$nearSphere`.
 - **Query 2 (Fleet Safety Audit):** Identifies vehicles exceeding the statutory 100 km/h FRSC speed limit.
 - **Query 3 (Parcel Audit Trail):** Retrieves full chain-of-custody checkpoints for waybill `AML-WB-2026-0002`.

@@ -48,7 +48,7 @@ def adjust_columns(ws):
         col_letter = col[0].column_letter
         ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
 
-# 1. Stations (6 regional hubs across Nigeria)
+# Stations (6 regional hubs across Nigeria)
 print("Generating stations data...")
 ws_stations = wb.create_sheet(title="stations")
 station_headers = ["station_id", "station_name", "state", "address", "contact_phone", "manager_name"]
@@ -67,7 +67,7 @@ for row in stations_data:
     ws_stations.append(list(row))
 adjust_columns(ws_stations)
 
-# 2. Vehicles (20 fleet vehicles: HiAce buses and Sienna minivans)
+# Vehicles (20 fleet vehicles: HiAce buses and Sienna minivans)
 print("Generating fleet vehicles...")
 ws_vehicles = wb.create_sheet(title="vehicles")
 vehicle_headers = ["vehicle_id", "registration_number", "chassis_number", "make_model", 
@@ -96,7 +96,7 @@ for v_id in range(1, 21):
 
 adjust_columns(ws_vehicles)
 
-# 3. Drivers (20 drivers with verified NIN and licenses)
+# Drivers (20 drivers with verified NIN and licenses)
 print("Generating drivers...")
 ws_drivers = wb.create_sheet(title="drivers")
 driver_headers = ["driver_id", "full_name", "phone_number", "nin", "license_number", 
@@ -123,7 +123,7 @@ for d_id in range(1, 21):
 
 adjust_columns(ws_drivers)
 
-# 4. Customers (500 customers with contact and emergency details)
+# Customers (500 customers with contact and emergency details)
 print("Generating customer profiles...")
 ws_customers = wb.create_sheet(title="customers")
 customer_headers = ["customer_id", "full_name", "phone_number", "email", "nin", 
@@ -146,7 +146,7 @@ for c_id in range(1, 501):
 
 adjust_columns(ws_customers)
 
-# 5. Routes (10 interstate travel corridors)
+# Routes (10 interstate travel corridors)
 print("Generating routes...")
 ws_routes = wb.create_sheet(title="routes")
 route_headers = ["route_id", "origin_station_id", "destination_station_id", 
@@ -170,7 +170,7 @@ for r in routes_raw:
     ws_routes.append(list(r))
 adjust_columns(ws_routes)
 
-# 6. Trips (1,200 scheduled journeys across routes)
+# Trips (1,200 scheduled journeys across routes)
 print("Generating 1,200 trips...")
 ws_trips = wb.create_sheet(title="trips")
 trip_headers = ["trip_id", "route_id", "vehicle_id", "driver_id", 
@@ -203,7 +203,7 @@ for t_id in range(1, 1201):
 
 adjust_columns(ws_trips)
 
-# 7. Bookings (8,000 passenger seat bookings)
+# Bookings (8,000 passenger seat bookings)
 print("Generating 8,000 bookings...")
 ws_bookings = wb.create_sheet(title="bookings")
 booking_headers = ["booking_id", "trip_id", "customer_id", "seat_number", 
@@ -238,7 +238,7 @@ for trip in trips_data:
 
 adjust_columns(ws_bookings)
 
-# 8. Parcels (3,500 parcel waybill deliveries)
+# Parcels (3,500 parcel waybill deliveries)
 print("Generating 3,500 parcel deliveries...")
 ws_parcels = wb.create_sheet(title="parcels")
 parcel_headers = ["parcel_id", "trip_id", "sender_customer_id", "recipient_name", 

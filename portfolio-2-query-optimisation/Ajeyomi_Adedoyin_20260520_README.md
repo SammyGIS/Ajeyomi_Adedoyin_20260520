@@ -114,11 +114,7 @@ The table below summarizes the performance metrics captured from PostgreSQL 14+ 
 | **Query 3: Parcel Tracking** | 7.28 ms | 0.97 ms | **7.5x Faster** | 58.65 | 16.45 | 48 $\rightarrow$ 16 blocks |
 | **Query 4: Driver Workload** | 22.75 ms | 3.49 ms | **6.5x Faster** | 312.78 | 82.48 | 114 $\rightarrow$ 28 blocks |
 
-### Key Performance Takeaways:
-- **Average latency reduction:** Across all four queries, execution time improved by **over 80%**.
-- **Buffer efficiency:** Memory page access dropped by up to **78%**, meaning the database server handles significantly higher user concurrency without disk I/O thrashing.
-- **Scan transition:** The execution plans transitioned from expensive sequential table scans (`Seq Scan`) to direct `Index Scan` and `Bitmap Index Scan` operations.
-- **Execution Plans Source:** Complete verifiable execution plans and buffer stats before and after optimization are recorded in [`Ajeyomi_Adedoyin_20260520_Query_Execution_Plans.txt`](Ajeyomi_Adedoyin_20260520_Query_Execution_Plans.txt).
+Complete execution plans and buffer statistics before and after optimisation are recorded in [`Ajeyomi_Adedoyin_20260520_Query_Execution_Plans.txt`](Ajeyomi_Adedoyin_20260520_Query_Execution_Plans.txt).
 
 ---
 

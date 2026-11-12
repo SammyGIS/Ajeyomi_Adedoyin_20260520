@@ -147,17 +147,3 @@ You do not need to use the terminal. Concurrency tests simulate two users acting
 
 3. **View Full Test Outputs:**
    Open [Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt](Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt) to inspect the complete transcript logs for all 5 scenarios.
-
----
-
-## 8. Concurrency Locking Architecture & Verification Evidence
-
-The diagram below illustrates the exact locking sequence and race condition prevention mechanism:
-
-![Pessimistic Concurrency Locking Workflow](assets/Ajeyomi_Adedoyin_20260520_Concurrency_Locking_Workflow.png)
-
-### Key Concurrency Takeaways:
-1. **Race Condition Prevention:** By issuing `SELECT ... FOR UPDATE` before confirming seats, Session B is forced to wait until Session A commits, completely eliminating duplicate ticket sales.
-2. **Deterministic Isolation:** PostgreSQL's transaction manager prevents dirty reads and ensures snapshot stability across concurrent queries.
-3. **Automated Deadlock Resolution:** Circular lock dependencies are proactively aborted within 1,000 ms, releasing contested rows so other operational sessions continue without human intervention.
-4. **Complete Terminal Transcript:** For the full verbatim console output of all 5 tested concurrency scenarios, refer to [`Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt`](Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt).

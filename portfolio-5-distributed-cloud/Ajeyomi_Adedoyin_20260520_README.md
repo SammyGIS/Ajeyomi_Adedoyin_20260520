@@ -10,7 +10,7 @@
 
 ---
 
-## 1. Executive Summary & Distributed Architecture Overview
+## 1. Introduction and Distributed Architecture Overview
 
 In earlier portfolio modules, we established a robust relational schema (Portfolio 1), optimised complex query execution plans (Portfolio 2), guaranteed transactional concurrency without race conditions (Portfolio 3), and deployed a document store for IoT fleet telemetry (Portfolio 4).
 
@@ -278,12 +278,3 @@ FROM pg_stat_replication;
 
 ### Step 3: Verify Failover Simulation
 Review the simulation log in `Ajeyomi_Adedoyin_20260520_Replication_Failover_Simulation.txt` to examine the timeline promotion, virtual floating IP reallocation, and recovery under `pg_rewind`.
-
----
-
-## 7. Conclusion
-
-Portfolio 5 completes the architectural evolution of **Adedoyin Mobility and Logistics**:
-- **Geographic Sharding** isolates regional corridor traffic, eliminating sequential scan bottlenecks and accelerating query execution by over 80%.
-- **Synchronous Streaming Replication** guarantees zero data loss ($\text{RPO} = 0$) across Lagos, Abuja, and Kano.
-- **Automated Failover via Patroni and etcd** eliminates single points of failure, delivering sub-10-second recovery ($\text{RTO} \le 10$ seconds) and continuous high availability for nationwide operations.

@@ -6,28 +6,28 @@
 -- Description:  Copies operational CSV data from data/ directory into the 8 tables
 -- ==============================================================================
 
--- 1. Stations
+-- Stations
 \copy stations(station_id, station_name, state, address, contact_phone, manager_name) FROM 'data/stations.csv' WITH (FORMAT csv, HEADER true);
 
--- 2. Vehicles
+-- Vehicles
 \copy vehicles(vehicle_id, registration_number, chassis_number, make_model, seating_capacity, current_station_id, roadworthiness_expiry, gps_tracker_id, status) FROM 'data/vehicles.csv' WITH (FORMAT csv, HEADER true);
 
--- 3. Drivers
+-- Drivers
 \copy drivers(driver_id, full_name, phone_number, nin, license_number, license_expiry, assigned_vehicle_id, status) FROM 'data/drivers.csv' WITH (FORMAT csv, HEADER true);
 
--- 4. Customers
+-- Customers
 \copy customers(customer_id, full_name, phone_number, email, nin, emergency_contact_name, emergency_contact_phone) FROM 'data/customers.csv' WITH (FORMAT csv, HEADER true);
 
--- 5. Routes
+-- Routes
 \copy routes(route_id, origin_station_id, destination_station_id, distance_km, est_travel_hours, base_passenger_fare, base_parcel_rate) FROM 'data/routes.csv' WITH (FORMAT csv, HEADER true);
 
--- 6. Trips
+-- Trips
 \copy trips(trip_id, route_id, vehicle_id, driver_id, departure_datetime, arrival_datetime, trip_status) FROM 'data/trips.csv' WITH (FORMAT csv, HEADER true);
 
--- 7. Bookings
+-- Bookings
 \copy bookings(booking_id, trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference, booking_timestamp) FROM 'data/bookings.csv' WITH (FORMAT csv, HEADER true);
 
--- 8. Parcels
+-- Parcels
 \copy parcels(parcel_id, trip_id, sender_customer_id, recipient_name, recipient_phone, recipient_nin, waybill_number, weight_kg, declared_value, delivery_status) FROM 'data/parcels.csv' WITH (FORMAT csv, HEADER true);
 
 -- Reset serial identity sequences to current max ID
