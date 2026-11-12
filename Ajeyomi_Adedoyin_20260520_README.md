@@ -20,7 +20,7 @@ The portfolio covers five core database engineering areas:
 2. **Portfolio 2: Query Processing and Optimisation** (Execution plans, indexing strategies, and query tuning)
 3. **Portfolio 3: Transactions and Concurrency** (ACID guarantees, row locking, and avoiding race conditions)
 4. **Portfolio 4: NoSQL Databases** (Document stores, JSON telemetry, geospatial indexing, and polyglot persistence)
-5. **Portfolio 5: Distributed and Cloud Databases** (Corridor sharding, replication, Patroni HA failover, and high availability)
+5. **Portfolio 5: Distributed and Cloud Databases** (Replication and failover, partition pruning, sharding across servers, and a cloud design)
 
 ---
 
