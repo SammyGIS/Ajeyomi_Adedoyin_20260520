@@ -179,3 +179,21 @@ You do not need to use the command line terminal. You can run all scripts direct
 3. **Populate Records (choose one option, not both):**
    - **Option A (pgAdmin 4, plain SQL):** open `portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Seed_Data.sql` and press **F5**. This loads a sample set of stations, vehicles, drivers, customers, routes, trips, bookings and parcels.
    - **Option B (full dataset, `psql`):** from the repository root, run `psql -U postgres -d adedoyin_mobility -f portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Copy_From_CSV.sql`. This loads 8,000 bookings, 3,500 parcels and 1,200 trips from `data/`. It uses the `\copy` command, which only works in `psql`.
+
+---
+
+## 7. Execution Screenshots
+
+All screenshots were taken in pgAdmin 4 on PostgreSQL 17, database `adedoyin_mobility`.
+
+**Tables created and records loaded:** the 8 tables appear under `public > Tables`, and the `trips` table is populated.
+
+![Tables and trips data in pgAdmin 4](assets/Ajeyomi_Adedoyin_20260520_pgAdmin_Tables_and_Data.png)
+
+**Constraints stored in the database:** the constraint catalogue for `customers` lists the primary key, the unique phone number and the NIN check.
+
+![Constraints on the customers table](assets/Ajeyomi_Adedoyin_20260520_pgAdmin_Customer_Constraints.png)
+
+**A rule being enforced:** inserting a customer with a 3-digit NIN is rejected by `chk_customer_nin`.
+
+![NIN constraint rejecting an invalid insert](assets/Ajeyomi_Adedoyin_20260520_pgAdmin_NIN_Constraint_Error.png)
