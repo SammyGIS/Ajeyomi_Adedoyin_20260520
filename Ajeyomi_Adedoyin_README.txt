@@ -18,7 +18,7 @@ What it stores: stations, vehicles, drivers, customers, routes, trips, seat book
 
 What it must do: book a seat without ever selling it twice, track parcels, report revenue per route, report on driver work, and keep working when a server fails.
 
-The real data is 6 stations, 20 vehicles, 20 drivers, 500 customers, 10 routes, 1,200 trips, 8,000 bookings and 3,500 parcels. I made it with a Python script in the data folder. I used the same company in all five portfolios.
+The real data is 6 stations, 20 vehicles, 20 drivers, 500 customers, 10 routes, 1,200 trips, 8,000 bookings and 3,500 parcels. I made it with a Python script and the Faker library in the data folder. I used the same company in all five portfolios.
 
 
 2. PORTFOLIO 1: DATABASE DESIGN
@@ -92,6 +92,7 @@ The cloud design (servers in Lagos, Abuja and Kano, Patroni and etcd for automat
 Design choices: I kept money and seats in PostgreSQL because they need strict rules, and I put GPS pings and parcel history in MongoDB because they change shape and arrive all the time. I split trips by region because most work is for one region at a time.
 
 Challenges:
+- I had no real company data, so I generated all of it myself with a Python script and the Faker library. It was hard to make fake data that looks real for Nigeria and also follows every database rule (11 digit NINs, unique phone numbers and plates, one booking per seat, correct dates and prices). I used my own lists of Nigerian names, stations and routes, and I fixed the data whenever the database refused it.
 - My data was too small to show index gains. I solved it with a scaled copy in a separate database and I say this clearly in the README.
 - Tests with two people at once need good timing. I had to change the delays in my script until the second session really collided with the first.
 - MongoDB refused my own generated data twice, for a wrong number type and a fuel level above 100. Fixing it taught me how validation works.
@@ -118,7 +119,7 @@ MongoDB manual: indexes, https://www.mongodb.com/docs/manual/indexes/
 MongoDB manual: geospatial 2dsphere indexes, https://www.mongodb.com/docs/manual/core/indexes/index-types/geospatial/2dsphere/
 MongoDB manual: schema validation, https://www.mongodb.com/docs/manual/core/schema-validation/
 MongoDB manual: TTL indexes, https://www.mongodb.com/docs/manual/core/index-ttl/
-Tools: PostgreSQL 17.5, pgAdmin 4, MongoDB 9.0, mongosh, MongoDB Compass, Python 3 (data generation, charts), PowerShell (test scripts).
+Tools: PostgreSQL 17.5, pgAdmin 4, MongoDB 9.0, mongosh, MongoDB Compass, Python 3 with the Faker and openpyxl libraries (data generation), Matplotlib (charts), PowerShell (test scripts).
 Data: the data is not real company data. I generated it myself with the Python scripts in the data folder.
 Course material: MIT 8103 Advanced Database Systems lecture notes and the assessment brief.
 
