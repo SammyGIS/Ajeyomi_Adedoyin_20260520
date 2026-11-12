@@ -2,24 +2,24 @@ vehicle_telemetry documents: 23802
 parcel_tracking documents:   3500
 
 BASELINE (no extra indexes)
-Q1 pings within 80 km of Abuja
+Q1 GPS locations within 80 km of Abuja
   plan: COLLSCAN
   time: 30 ms | documents examined: 23802 | index keys examined: 0 | returned: 2428
-Q2 one vehicle's pings in one week
+Q2 one vehicle's GPS locations in one week
   plan: SORT > COLLSCAN
-  time: 60 ms | documents examined: 23802 | index keys examined: 0 | returned: 88
+  time: 61 ms | documents examined: 23802 | index keys examined: 0 | returned: 88
 Q3 parcel lookup by waybill
   plan: COLLSCAN
-  time: 5 ms | documents examined: 3500 | index keys examined: 0 | returned: 1
+  time: 6 ms | documents examined: 3500 | index keys examined: 0 | returned: 1
 Q4 speeding alerts on Lagos-Abuja
   plan: COLLSCAN
-  time: 59 ms | documents examined: 23802 | index keys examined: 0 | returned: 126
+  time: 48 ms | documents examined: 23802 | index keys examined: 0 | returned: 126
 
 OPTIMISED (with indexes)
-Q1 pings within 80 km of Abuja
+Q1 GPS locations within 80 km of Abuja
   plan: FETCH > IXSCAN (idx_telemetry_2dsphere_location)
-  time: 8 ms | documents examined: 2762 | index keys examined: 2768 | returned: 2428
-Q2 one vehicle's pings in one week
+  time: 7 ms | documents examined: 2762 | index keys examined: 2768 | returned: 2428
+Q2 one vehicle's GPS locations in one week
   plan: FETCH > IXSCAN (idx_telemetry_vehicle_time)
   time: 0 ms | documents examined: 88 | index keys examined: 88 | returned: 88
 Q3 parcel lookup by waybill
@@ -30,12 +30,12 @@ Q4 speeding alerts on Lagos-Abuja
   time: 0 ms | documents examined: 126 | index keys examined: 126 | returned: 126
 
 SUMMARY
-Q1 pings within 80 km of Abuja: examined 23802 documents -> 2762, 30 ms -> 8 ms
-Q2 one vehicle's pings in one week: examined 23802 documents -> 88, 60 ms -> 0 ms
-Q3 parcel lookup by waybill: examined 3500 documents -> 1, 5 ms -> 0 ms
-Q4 speeding alerts on Lagos-Abuja: examined 23802 documents -> 126, 59 ms -> 0 ms
+Q1 GPS locations within 80 km of Abuja: examined 23802 documents -> 2762, 30 ms -> 7 ms
+Q2 one vehicle's GPS locations in one week: examined 23802 documents -> 88, 61 ms -> 0 ms
+Q3 parcel lookup by waybill: examined 3500 documents -> 1, 6 ms -> 0 ms
+Q4 speeding alerts on Lagos-Abuja: examined 23802 documents -> 126, 48 ms -> 0 ms
 
-QUERY 1: vehicles within 80 km of Abuja Utako (nearest pings first)
+QUERY 1: vehicles within 80 km of Abuja Utako (nearest first)
 [
   {
     registration_number: 'ABC-352AB',
@@ -232,15 +232,15 @@ QUERY 4: parcel scans per station and status (top 10)
   },
   {
     scans: 664,
-    last_scan: ISODate('2026-09-25T10:00:00.000Z'),
-    station: 'Abuja Utako Central Hub',
-    status: 'Registered'
-  },
-  {
-    scans: 664,
     last_scan: ISODate('2026-09-25T11:40:00.000Z'),
     station: 'Abuja Utako Central Hub',
     status: 'Loaded'
+  },
+  {
+    scans: 664,
+    last_scan: ISODate('2026-09-25T10:00:00.000Z'),
+    station: 'Abuja Utako Central Hub',
+    status: 'Registered'
   },
   {
     scans: 543,
@@ -250,75 +250,75 @@ QUERY 4: parcel scans per station and status (top 10)
   }
 ]
 
-QUERY 5: telemetry summary per corridor
+QUERY 5: GPS summary for each route
 [
   {
-    pings: 2257,
-    speeding_pings: 63,
-    corridor: 'Abuja-Kano',
+    gps_records: 2257,
+    speeding_records: 63,
+    route: 'Abuja-Kano',
     avg_speed_kmh: 71.4,
     max_speed_kmh: 117.8
   },
   {
-    pings: 4282,
-    speeding_pings: 120,
-    corridor: 'Abuja-Lagos',
+    gps_records: 4282,
+    speeding_records: 120,
+    route: 'Abuja-Lagos',
     avg_speed_kmh: 73.4,
     max_speed_kmh: 117.8
   },
   {
-    pings: 1524,
-    speeding_pings: 33,
-    corridor: 'Benin-Enugu',
+    gps_records: 1524,
+    speeding_records: 33,
+    route: 'Benin-Enugu',
     avg_speed_kmh: 68.8,
     max_speed_kmh: 118
   },
   {
-    pings: 2628,
-    speeding_pings: 64,
-    corridor: 'Benin-Lagos',
+    gps_records: 2628,
+    speeding_records: 64,
+    route: 'Benin-Lagos',
     avg_speed_kmh: 71,
     max_speed_kmh: 117.2
   },
   {
-    pings: 2126,
-    speeding_pings: 66,
-    corridor: 'Enugu-Benin',
+    gps_records: 2126,
+    speeding_records: 66,
+    route: 'Enugu-Benin',
     avg_speed_kmh: 69.1,
     max_speed_kmh: 117.9
   },
   {
-    pings: 1182,
-    speeding_pings: 28,
-    corridor: 'Ibadan-Lagos',
+    gps_records: 1182,
+    speeding_records: 28,
+    route: 'Ibadan-Lagos',
     avg_speed_kmh: 65.4,
     max_speed_kmh: 117.9
   },
   {
-    pings: 2287,
-    speeding_pings: 70,
-    corridor: 'Kano-Abuja',
+    gps_records: 2287,
+    speeding_records: 70,
+    route: 'Kano-Abuja',
     avg_speed_kmh: 71.5,
     max_speed_kmh: 117.8
   },
   {
-    pings: 4070,
-    speeding_pings: 126,
-    corridor: 'Lagos-Abuja',
+    gps_records: 4070,
+    speeding_records: 126,
+    route: 'Lagos-Abuja',
     avg_speed_kmh: 73.7,
     max_speed_kmh: 117.8
   },
   {
-    pings: 2227,
-    speeding_pings: 71,
-    corridor: 'Lagos-Benin',
+    gps_records: 2227,
+    speeding_records: 71,
+    route: 'Lagos-Benin',
     avg_speed_kmh: 71,
     max_speed_kmh: 118
   },
   {
-    pings: 1219,
-    speeding_pings: 35,
-    corridor: 'Lagos-Ibadan',
+    gps_records: 1219,
+    speeding_records: 35,
+    route: 'Lagos-Ibadan',
     avg_speed_kmh: 65.7,
     max_speed_kmh: 117.9
   }
@@ -332,6 +332,6 @@ documents before waiting: 3
 documents after waiting 80 s: 1
 [
   {
-    note: 'ping not yet expired'
+    note: 'record not yet expired'
   }
 ]

@@ -30,7 +30,7 @@ db.createCollection("vehicle_telemetry", {
         },
         route_corridor: {
           bsonType: "string",
-          description: "Designated highway corridor (e.g. Lagos-Ibadan-Abuja)"
+          description: "The route the vehicle is on (for example Lagos-Abuja)"
         },
         location: {
           bsonType: "object",
@@ -63,7 +63,7 @@ db.createCollection("vehicle_telemetry", {
         },
         recorded_at: {
           bsonType: "date",
-          description: "UTC ISODate timestamp of the IoT telemetry ping"
+          description: "Time of the GPS location record (UTC)"
         }
       }
     }
@@ -152,9 +152,9 @@ print("parcel_tracking documents:   " + db.parcel_tracking.countDocuments());
 // Benchmark queries, measured before and after the indexes exist
 const abuja = [7.4913, 9.0765];
 const benchmarks = [
-  { name: "Q1 pings within 80 km of Abuja", coll: db.vehicle_telemetry,
+  { name: "Q1 GPS locations within 80 km of Abuja", coll: db.vehicle_telemetry,
     query: { location: { $geoWithin: { $centerSphere: [abuja, 80 / 6378.1] } } } },
-  { name: "Q2 one vehicle's pings in one week", coll: db.vehicle_telemetry,
+  { name: "Q2 one vehicle's GPS locations in one week", coll: db.vehicle_telemetry,
     query: { vehicle_id: 5, recorded_at: { $gte: ISODate("2026-07-01T00:00:00Z"), $lt: ISODate("2026-07-08T00:00:00Z") } },
     sort: { recorded_at: -1 } },
   { name: "Q3 parcel lookup by waybill", coll: db.parcel_tracking,
@@ -216,7 +216,7 @@ benchmarks.forEach((b, i) => {
 });
 
 // Operational queries
-print("\nQUERY 1: vehicles within 80 km of Abuja Utako (nearest pings first)");
+print("\nQUERY 1: vehicles within 80 km of Abuja Utako (nearest first)");
 printjson(db.vehicle_telemetry.find(
   { location: { $nearSphere: { $geometry: { type: "Point", coordinates: abuja }, $maxDistance: 80000 } } },
   { registration_number: 1, route_corridor: 1, location_address: 1, "metrics.speed_kmh": 1, recorded_at: 1, _id: 0 }
@@ -245,14 +245,14 @@ printjson(db.parcel_tracking.aggregate([
   { $limit: 10 }
 ]).toArray());
 
-print("\nQUERY 5: telemetry summary per corridor");
+print("\nQUERY 5: GPS summary for each route");
 printjson(db.vehicle_telemetry.aggregate([
-  { $group: { _id: "$route_corridor", pings: { $sum: 1 }, avg_speed_kmh: { $avg: "$metrics.speed_kmh" },
+  { $group: { _id: "$route_corridor", gps_records: { $sum: 1 }, avg_speed_kmh: { $avg: "$metrics.speed_kmh" },
               max_speed_kmh: { $max: "$metrics.speed_kmh" },
-              speeding_pings: { $sum: { $cond: ["$alerts.speed_warning", 1, 0] } } } },
-  { $project: { _id: 0, corridor: "$_id", pings: 1, avg_speed_kmh: { $round: ["$avg_speed_kmh", 1] },
-                max_speed_kmh: { $round: ["$max_speed_kmh", 1] }, speeding_pings: 1 } },
-  { $sort: { corridor: 1 } }
+              speeding_records: { $sum: { $cond: ["$alerts.speed_warning", 1, 0] } } } },
+  { $project: { _id: 0, route: "$_id", gps_records: 1, avg_speed_kmh: { $round: ["$avg_speed_kmh", 1] },
+                max_speed_kmh: { $round: ["$max_speed_kmh", 1] }, speeding_records: 1 } },
+  { $sort: { route: 1 } }
 ]).toArray());
 
 // Validation check: a document that breaks the rules is refused
@@ -271,9 +271,9 @@ print("\nTTL DEMO: documents expire 30 seconds after recorded_at");
 db.ttl_demo.drop();
 db.ttl_demo.createIndex({ recorded_at: 1 }, { expireAfterSeconds: 30, name: "idx_ttl_demo_30s" });
 db.ttl_demo.insertMany([
-  { note: "old ping 1", recorded_at: new Date(Date.now() - 120000) },
-  { note: "old ping 2", recorded_at: new Date(Date.now() - 90000) },
-  { note: "ping not yet expired", recorded_at: new Date(Date.now() + 3600000) }
+  { note: "old record 1", recorded_at: new Date(Date.now() - 120000) },
+  { note: "old record 2", recorded_at: new Date(Date.now() - 90000) },
+  { note: "record not yet expired", recorded_at: new Date(Date.now() + 3600000) }
 ]);
 print("documents before waiting: " + db.ttl_demo.countDocuments());
 sleep(80000);
