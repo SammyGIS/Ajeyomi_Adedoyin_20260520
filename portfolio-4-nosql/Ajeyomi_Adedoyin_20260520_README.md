@@ -130,6 +130,10 @@ The explain plan for the same query in Compass. It uses an index scan (IXSCAN) o
 
 ![Explain plan in Compass](assets/Ajeyomi_Adedoyin_20260520_Compass_Telemetry_Explain_Plan.png)
 
+The indexes on vehicle_telemetry in Compass: the default `_id_` index, the geospatial 2dsphere index on location, a compound index on corridor and speeding alert, and a compound index on vehicle and time.
+
+![Indexes on vehicle_telemetry in Compass](assets/Ajeyomi_Adedoyin_20260520_Compass_Telemetry_Indexes.png)
+
 ## 10. How to run it again
 
 1. Install MongoDB and mongosh, and make sure MongoDB is running on the normal port 27017.
