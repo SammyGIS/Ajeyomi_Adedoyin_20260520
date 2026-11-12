@@ -59,7 +59,7 @@ CREATE TABLE drivers (
     nin                 CHAR(11)     NOT NULL UNIQUE,      -- Nigerian 11-digit NIN
     license_number      VARCHAR(30)  NOT NULL UNIQUE,      -- FRSC Driver's License
     license_expiry      DATE         NOT NULL,
-    assigned_vehicle_id INT          REFERENCES vehicles(vehicle_id) ON DELETE SET NULL,
+    assigned_vehicle_id INT          UNIQUE REFERENCES vehicles(vehicle_id) ON DELETE SET NULL,  -- UNIQUE = one primary driver per vehicle (1:1)
     status              VARCHAR(30)  NOT NULL DEFAULT 'Available',
     created_at          TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
@@ -78,7 +78,9 @@ CREATE TABLE customers (
     nin                     CHAR(11),                          -- Customer KYC / Security
     emergency_contact_name  VARCHAR(120) NOT NULL,             -- FRSC Manifest compliance
     emergency_contact_phone VARCHAR(20)  NOT NULL,
-    created_at              TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at              TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_customer_nin CHECK (nin IS NULL OR nin ~ '^[0-9]{11}$')
 );
 
 -- ------------------------------------------------------------------------------
@@ -94,7 +96,7 @@ CREATE TABLE routes (
     base_parcel_rate        NUMERIC(10, 2) NOT NULL,
     created_at              TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT uq_route_pair CHECK (origin_station_id <> destination_station_id),
+    CONSTRAINT chk_route_pair CHECK (origin_station_id <> destination_station_id),
     CONSTRAINT uq_origin_destination UNIQUE (origin_station_id, destination_station_id),
     CONSTRAINT chk_route_metrics CHECK (
         distance_km > 0 AND est_travel_hours > 0 AND base_passenger_fare >= 0 AND base_parcel_rate >= 0
@@ -153,6 +155,7 @@ CREATE TABLE parcels (
     created_at          TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT chk_parcel_weight   CHECK (weight_kg > 0 AND weight_kg <= 100),
+    CONSTRAINT chk_recipient_nin   CHECK (recipient_nin IS NULL OR recipient_nin ~ '^[0-9]{11}$'),
     CONSTRAINT chk_delivery_status CHECK (
         delivery_status IN ('Registered', 'Loaded', 'In-Transit', 'Arrived-Hub', 'Delivered', 'Returned')
     )
