@@ -32,7 +32,7 @@ function Start-Session([string]$name, [string]$sql) {
     $out  = Join-Path $work "$safe.txt"
     [System.IO.File]::WriteAllText($file, $sql, $utf8)
     if (Test-Path $out) { Remove-Item $out }
-    $cmd = '"{0}" -X -a -h localhost -p {1} -U {2} -d {3} -f "{4}" > "{5}" 2>&1' -f $Psql, $Port, $User, $Db, $file, $out
+    $cmd = '"{0}" -X -a -h localhost -p {1} -U {2} -d {3} < "{4}" > "{5}" 2>&1' -f $Psql, $Port, $User, $Db, $file, $out
     $p = Start-Process -FilePath "cmd.exe" -ArgumentList ('/c "' + $cmd + '"') -WindowStyle Hidden -PassThru
     [pscustomobject]@{ Process = $p; Out = $out }
 }
@@ -85,10 +85,11 @@ $a = @"
 BEGIN;
 $(Mark 'A' 'checking whether seat 5 on trip 9003 is free')
 SELECT seat_number FROM bookings WHERE trip_id = 9003 AND seat_number = 5;
-SELECT pg_sleep(4) AS customer_A_is_entering_payment_details;
+SELECT pg_sleep(3) AS customer_A_is_entering_payment_details;
 $(Mark 'A' 'inserting seat 5')
 INSERT INTO bookings (trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference)
 VALUES (9003, 201, 5, 18500.00, 'Confirmed', 'RACE-A');
+SELECT pg_sleep(3) AS customer_A_has_not_committed_yet;
 COMMIT;
 $(Mark 'A' 'committed')
 "@
@@ -97,6 +98,7 @@ $b = @"
 BEGIN;
 $(Mark 'B' 'checking whether seat 5 on trip 9003 is free')
 SELECT seat_number FROM bookings WHERE trip_id = 9003 AND seat_number = 5;
+SELECT pg_sleep(2.5) AS customer_B_is_entering_payment_details;
 $(Mark 'B' 'seat looks free, inserting seat 5')
 INSERT INTO bookings (trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference)
 VALUES (9003, 202, 5, 18500.00, 'Confirmed', 'RACE-B');

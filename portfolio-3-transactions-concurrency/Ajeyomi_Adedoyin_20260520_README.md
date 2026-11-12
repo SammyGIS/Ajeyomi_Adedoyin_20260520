@@ -1,149 +1,131 @@
-# Portfolio 3: Transactions and Concurrency Control
+# Portfolio 3: Transactions and Concurrency
 
-**Student Name:** Adedoyin Ajeyomi  
-**Student ID:** 20260520  
-**Course:** MIT 8103 - Advanced Database Systems  
-**Case Study:** Adedoyin Mobility and Logistics  
-**Database Engine:** PostgreSQL 14+  
-
----
-
-## 1. Introduction: What is a Database Transaction?
-
-A **transaction** is a sequence of one or more database operations treated as a single, indivisible unit of work.
-
-In a passenger transport and courier company like **Adedoyin Mobility and Logistics**, hundreds of passengers buy tickets and reserve seats at the same time across our 6 regional stations (Lagos, Ibadan, Abuja, Benin City, Enugu, Kano). 
-
-If two passengers try to reserve the same seat simultaneously, or if a payment fails halfway through booking, the database must guarantee data accuracy without selling duplicate tickets.
+Student Name: Adedoyin Ajeyomi
+Student ID: 20260520
+Course: MIT 8103 - Advanced Database Systems
+Case Study: Adedoyin Mobility and Logistics
+Database: PostgreSQL 17.5
 
 ---
 
-## 2. The ACID Principles Explained
+## 1. What this portfolio is about
 
-Every reliable relational database guarantees four properties known as **ACID**:
+In my case study, many people buy tickets at the same time. Customers book seats at the ticket counters in Lagos, Ibadan, Abuja, Benin City, Enugu and Kano, and on the mobile app. The database must never sell one seat twice, and it must never keep half of a booking when something goes wrong.
 
-1. **Atomicity ("All or Nothing"):**  
-   All steps of a booking must complete successfully (checking availability → debiting customer → recording ticket). If any step fails, the entire transaction is rolled back with `ROLLBACK`, leaving no partial changes.
-2. **Consistency (Preserving Business Rules):**  
-   The database starts in a valid state and ends in a valid state. For example, our unique constraint on `(trip_id, seat_number)` and check constraint on ticket prices are strictly enforced at all times.
-3. **Isolation (Separation of Concurrent Work):**  
-   Operations running at the same time do not interfere with each other or see intermediate, uncommitted changes.
-4. **Durability (Permanent Storage):**  
-   Once a transaction issues `COMMIT`, its changes are safely recorded on disk (via the Write-Ahead Log / WAL) and will not be lost even if the server crashes or loses power.
+A transaction is a group of database steps that are treated as one job. Either every step is saved, or none of them are. In this portfolio I tested five things on my own PostgreSQL server:
 
----
+1. Saving a booking with COMMIT, and cancelling one with ROLLBACK.
+2. Two customers trying to take the same seat, with no lock.
+3. The same two customers, with a row lock.
+4. Two isolation levels, which control what a running report can see.
+5. A deadlock, and how to avoid it.
 
-## 3. The Double-Booking Race Condition
+## 2. How I tested
 
-When multiple users interact with the system simultaneously, standard SQL statements can cause a **Race Condition**:
+The real trips in my data are all Completed or Cancelled, and their seats are already booked. So for these tests I added four new demo trips (trip numbers 9001 to 9004) on the Lagos to Abuja route. The test script deletes them again when it finishes. After the last run my database was back to exactly 8,000 bookings, and the two vehicles I used were still Active.
 
-```text
-Time 08:00:01 — Passenger A checks Seat 4 on Trip 1. (Database says: "Vacant")
-Time 08:00:02 — Passenger B checks Seat 4 on Trip 1. (Database says: "Vacant")
-Time 08:00:03 — Passenger A pays and inserts booking for Seat 4.
-Time 08:00:04 — Passenger B pays and attempts to insert booking for Seat 4.
-```
+To test two people acting at the same time, I wrote a PowerShell script. It starts two real database sessions at once, session A first and session B a moment later. It saves everything PostgreSQL printed, with clock times, in the results file. Nothing in the results file was typed by hand.
 
-Without concurrency control, either two customers receive the same seat (a critical business failure) or Passenger B loses their money when the database throws a duplicate key error after payment.
+The script is `Ajeyomi_Adedoyin_20260520_Run_Concurrency_Tests.ps1` and the output is `Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt`.
 
----
+## 3. The four ACID rules
 
-## 4. Concurrency Control with Row-Level Locking (`SELECT FOR UPDATE`)
+- Atomicity means all or nothing. A booking is fully saved or fully cancelled.
+- Consistency means the rules of the database are always kept. In my database, a seat can only be booked once per trip, and a ticket price must be more than zero.
+- Isolation means people working at the same time do not disturb each other.
+- Durability means that after COMMIT, the data is safe, even if the power goes off.
 
-To prevent this problem, we use **Pessimistic Row-Level Locking**:
+## 4. Test 1: COMMIT, ROLLBACK and a failed statement
 
-```sql
-SELECT trip_id, trip_status 
-FROM trips 
-WHERE trip_id = 2 
-FOR UPDATE;
-```
+This test uses demo trip 9001 and is in `Ajeyomi_Adedoyin_20260520_Transactions.sql`.
 
-### How `FOR UPDATE` Works:
-1. When Passenger A runs `SELECT ... FOR UPDATE`, PostgreSQL places an **Exclusive Row Lock** on the selected trip record.
-2. When Passenger B tries to run the same query, Passenger B's session is put into a **wait state**.
-3. Passenger A confirms the seat is free, inserts the booking, and runs `COMMIT`.
-4. As soon as Passenger A commits, Passenger B unblocks, re-checks the seat, sees that Seat 4 is now marked as `Confirmed`, and is safely redirected to choose another seat.
+- Commit: customer 101 books seat 3 for 18,500. I run COMMIT and the booking is there when I look for it afterwards.
+- Rollback: customer 102 books seat 4. Inside the transaction I can see the booking. Then the "payment" fails, so I run ROLLBACK. When I look again, the booking is gone and seat 4 is free.
+- Failed statement: one transaction books seat 6 correctly, then tries to book seat 7 with a price of -100. PostgreSQL refuses the second one because of my rule `chk_booking_amount`. After the error, PostgreSQL ignores every other command in that transaction ("current transaction is aborted"). I run ROLLBACK, and seat 6 is gone as well, even though that part was fine. This shows atomicity: the two seats were one job, so they were saved together or not at all.
 
-![Pessimistic Row-Level Locking Workflow](assets/Ajeyomi_Adedoyin_20260520_Concurrency_Locking_Workflow.png)
+## 5. Test 2: two customers, same seat, no lock
 
----
+Customer A and customer B both want seat 5 on trip 9003. Neither session uses a lock. This is what happened in the real run:
 
-## 5. PostgreSQL Transaction Isolation Levels
+- Session A checks seat 5 and sees it is free (0 rows). Then B checks seat 5 and also sees it is free.
+- Session A inserts seat 5 first, but does not commit yet.
+- Session B still believes the seat is free, so it tries to insert seat 5 as well. PostgreSQL makes B wait for about 2 seconds, until A commits.
+- As soon as A commits, B fails with this error:
 
-SQL standards define four isolation levels. PostgreSQL supports three:
+  `ERROR: duplicate key value violates unique constraint "uq_trip_seat_no"`
 
-| Isolation Level | Dirty Read | Non-Repeatable Read | Phantom Read | Typical Use Case |
-| :--- | :---: | :---: | :---: | :--- |
-| **Read Committed** (Default) | Prevented | Allowed | Allowed | Standard web browsing, general ticket searches |
-| **Repeatable Read** | Prevented | **Prevented** | **Prevented** | Financial reporting, end-of-day revenue reconciliation |
-| **Serializable** | Prevented | Prevented | Prevented | Strict bank ledger transfers, high-value asset auctions |
+At the end, seat 5 belongs only to customer A. So there was no double booking, but only because of the rule from Portfolio 1 that a seat can be booked once per trip. Customer B only found out at the very last step, after waiting. In a real app, that could be after B has already paid.
 
-### Demonstration in Our Tests:
-- In **Read Committed**, when our finance auditor ran `SELECT SUM(ticket_amount)` twice inside the same transaction, the total increased from **₦142,500.00** to **₦171,000.00** because another passenger booked a ticket in between.
-- In **Repeatable Read**, the auditor's view was frozen at **₦171,000.00** throughout the report generation, completely ignoring concurrent inserts until the report finished.
+## 6. Test 3: two customers, same seat, with a row lock
 
----
+This time both sessions first run `SELECT ... FROM trips WHERE trip_id = 9002 FOR UPDATE`. This puts a lock on the trip. Only one session can hold it at a time.
 
-## 6. Deadlocks and Resolution
+- Session A asks for the lock and gets it straight away. It checks seat 5 (free), and takes about 4 seconds to "pay".
+- Session B asks for the lock 1.5 seconds later. It has to wait. In the real run it waited 2.5 seconds (the output shows `Time: 2507.734 ms`).
+- Session A inserts seat 5 and commits. The lock is released.
+- Session B gets the lock, checks seat 5, and sees it is already Confirmed for customer 203. B does ROLLBACK and tells the customer to pick another seat.
 
-A **deadlock** happens when two transactions each hold a lock that the other needs, creating an infinite circular wait:
+![Row lock workflow](assets/Ajeyomi_Adedoyin_20260520_Concurrency_Locking_Workflow.png)
 
-```text
-Session 1 holds Lock on Vehicle 1, requests Lock on Vehicle 2.
-Session 2 holds Lock on Vehicle 2, requests Lock on Vehicle 1.
-```
+Compared with Test 2, nobody gets an error at the last moment. The second customer learns that the seat is taken before trying to book it. I would still keep the unique rule in the database as a second safety net.
 
-### How PostgreSQL Handles Deadlocks:
-1. PostgreSQL runs a background deadlock detector that wakes up after `deadlock_timeout` (default: 1 second / 1000ms).
-2. It breaks the cycle by automatically aborting one transaction with:  
-   `ERROR: deadlock detected`.
-3. The aborted transaction issues a `ROLLBACK`, allowing the surviving transaction to finish with `COMMIT`.
+## 7. Test 4: isolation levels
 
-### Prevention Best Practice:
-To avoid deadlocks, all application services must acquire resource locks in a **consistent global order** (e.g., always locking vehicle IDs in ascending order: Vehicle 1 before Vehicle 2).
+Isolation decides what a running transaction can see while other people are saving new data. The test uses a finance report that adds up the ticket money for trip 9004. While the report runs, another passenger books a seat.
 
----
+Read Committed (the PostgreSQL default):
+- First read: 2 tickets, 37,000.
+- Another passenger books a seat and commits.
+- Second read, in the same transaction: 3 tickets, 55,500.
 
-## 7. How to Test Concurrency in pgAdmin 4 (Step-by-Step)
+The total changed in the middle of one report.
 
-You do not need to use the terminal. Concurrency tests simulate two users acting at the same time, which is easily done in **pgAdmin 4** by opening **two separate Query Tool tabs**:
+Repeatable Read:
+- First read: 3 tickets, 55,500.
+- Another passenger books a seat and commits.
+- Second read, in the same transaction: still 3 tickets, 55,500.
+- After the report finishes with COMMIT: 4 tickets, 74,000.
 
-1. **Open Two Query Tool Tabs in pgAdmin 4:**
-   - Launch pgAdmin 4 and connect to your database server.
-   - In the left Browser tree, right-click the **`adedoyin_mobility`** database and select **Query Tool**. This is **Tab 1 (Customer A)**.
-   - Right-click the **`adedoyin_mobility`** database a second time and select **Query Tool** again. This opens **Tab 2 (Customer B)**.
-   - You now have two completely independent database sessions running side-by-side.
+The report kept the same view from start to end, which is what a finance report needs. The new booking was not lost; the report just only saw it afterwards.
 
-2. **Step-by-Step Row-Level Locking Test (`SELECT ... FOR UPDATE`):**
-   - **In Tab 1 (Customer A):** Copy and run the lock query:
-     ```sql
-     BEGIN;
-     SELECT trip_id, trip_status FROM trips WHERE trip_id = 2 FOR UPDATE;
-     ```
-     Press **F5** (Execute). Customer A has acquired an exclusive lock on Trip 2.
-   - **In Tab 2 (Customer B):** Copy and run the concurrent booking attempt:
-     ```sql
-     BEGIN;
-     SELECT trip_id, trip_status FROM trips WHERE trip_id = 2 FOR UPDATE;
-     ```
-     Press **F5** (Execute). Notice the spinning activity indicator in pgAdmin — Tab 2 is safely waiting for Customer A to finish!
-   - **In Tab 1 (Customer A):** Complete Customer A's booking and release the lock:
-     ```sql
-     INSERT INTO bookings (trip_id, customer_id, seat_number, ticket_amount, booking_status, payment_reference)
-     VALUES (2, 103, 5, 28500.00, 'Confirmed', 'PAY-TXN-SEAT5-WINNER');
-     COMMIT;
-     ```
-     Press **F5**.
-   - **Switch to Tab 2 (Customer B):** As soon as Tab 1 commits, Tab 2 immediately unblocks! When you check the seat status:
-     ```sql
-     SELECT seat_number, booking_status FROM bookings WHERE trip_id = 2 AND seat_number = 5;
-     ```
-     pgAdmin displays that Seat 5 is already `Confirmed` by Customer A.
-   - **In Tab 2:** Safely cancel Customer B's transaction:
-     ```sql
-     ROLLBACK;
-     ```
+## 8. Test 5: deadlock
 
-3. **View Full Test Outputs:**
-   Open [Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt](Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt) to inspect the complete transcript logs for all 5 scenarios.
+A deadlock happens when two sessions each hold something the other one needs, so they wait for each other forever.
+
+Test 5A (opposite order):
+- Session A locks vehicle 1. Session B locks vehicle 2.
+- Then A asks for vehicle 2, and B asks for vehicle 1. Each is waiting for the other.
+- PostgreSQL noticed this after the `deadlock_timeout` of 1 second. In the real run, B was stopped after 1.006 seconds with `ERROR: deadlock detected`. Once B was cancelled, A was able to continue.
+
+Test 5B (same order):
+- Both sessions lock vehicle 1 first and vehicle 2 second.
+- B simply waits for about 2 seconds for A to finish, and there is no deadlock.
+
+The lesson: always take locks in the same order everywhere in the application. Both tests ended with ROLLBACK, so the vehicle statuses were not changed.
+
+## 9. What I learned
+
+- ROLLBACK and COMMIT keep a booking all or nothing.
+- The unique rule on trip and seat is the final protection against double booking, and a row lock gives a better experience, because the second customer finds out early.
+- Repeatable Read is better than Read Committed for reports that must add up correctly.
+- PostgreSQL finds deadlocks by itself, but it is better to avoid them by locking in the same order.
+- Locks make people wait. So transactions should be short, and a customer should not hold a lock while slowly typing card details.
+
+## 10. How to run the tests again
+
+Open PowerShell in the repository folder and run:
+
+    $env:PGPASSWORD = "your_postgres_password"
+    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+    .\portfolio-3-transactions-concurrency\Ajeyomi_Adedoyin_20260520_Run_Concurrency_Tests.ps1
+
+If your PostgreSQL port is not 5433, add `-Port 5432` (or your own port) at the end. The script takes about two minutes and writes a new results file.
+
+To try a single session by hand, open `Ajeyomi_Adedoyin_20260520_Transactions.sql` in pgAdmin 4. Run one block at a time, because pgAdmin only shows the result of the last statement.
+
+## 11. Files in this folder
+
+- `Ajeyomi_Adedoyin_20260520_Transactions.sql`: the demo trips and the commit, rollback and failed statement tests.
+- `Ajeyomi_Adedoyin_20260520_Run_Concurrency_Tests.ps1`: runs every test with two sessions at once.
+- `Ajeyomi_Adedoyin_20260520_Concurrency_Test_Results.txt`: the real output.
+- `assets/Ajeyomi_Adedoyin_20260520_Concurrency_Locking_Workflow.png`: the row lock diagram.
