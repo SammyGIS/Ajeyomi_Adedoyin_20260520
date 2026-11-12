@@ -10,12 +10,9 @@ GitHub: https://github.com/SammyGIS/Ajeyomi_Adedoyin_20260520
 ---
 
 ## 1. About this project
-
-This is my practical portfolio for MIT 8103. I used one company, Adedoyin Mobility and Logistics, in all five portfolios.
-
 Adedoyin Mobility and Logistics is a Nigerian transport company. It sells seats on buses and minivans between Lagos, Ibadan, Abuja, Benin City, Enugu and Kano, and it carries parcels between the same cities. It has 20 vehicles and 6 stations.
 
-The data is not real company data. I made it with Python scripts in the `data` folder: 500 customers, 1,200 trips, 8,000 bookings and 3,500 parcels.
+The data is created using the faker libary, with Python scripts in the `data` folder: 500 customers, 1,200 trips, 8,000 bookings and 3,500 parcels.
 
 For a short summary of the whole work, read `Ajeyomi_Adedoyin_README.txt`.
 
