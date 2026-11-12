@@ -86,11 +86,13 @@ Ajeyomi_Adedoyin_20260520/
 │
 ├── portfolio-5-distributed-cloud/
 │   ├── assets/
-│   │   ├── Ajeyomi_Adedoyin_20260520_Distributed_Cluster_Topology.png # Multi-region cloud topology diagram
-│   │   └── Ajeyomi_Adedoyin_20260520_Partition_Pruning_Benchmark.png  # Partition pruning benchmark chart
-│   ├── Ajeyomi_Adedoyin_20260520_README.md       # Distributed sharding, replication, and failover report
-│   ├── Ajeyomi_Adedoyin_20260520_Sharding_and_Replication.sql # Declarative partitioning, FDW, and replication DDL
-│   └── Ajeyomi_Adedoyin_20260520_Replication_Failover_Simulation.txt # Patroni HA failover logs and pruning output
+│   │   ├── Ajeyomi_Adedoyin_20260520_Distributed_Cluster_Topology.png # What was tested and what is only a design
+│   │   └── Ajeyomi_Adedoyin_20260520_Partition_Pruning_Benchmark.png  # Partition pruning chart
+│   ├── Ajeyomi_Adedoyin_20260520_README.md
+│   ├── Ajeyomi_Adedoyin_20260520_Run_Replication_Failover_Test.ps1  # Real primary, standby and failover test
+│   ├── Ajeyomi_Adedoyin_20260520_Replication_Failover_Test_Results.txt
+│   ├── Ajeyomi_Adedoyin_20260520_Run_Sharding_Test.ps1              # Real partitioning and postgres_fdw test
+│   └── Ajeyomi_Adedoyin_20260520_Sharding_Test_Results.txt
 │
 ├── data/                                         # Central Data Repository (All data: CSV, XLSX, and JSON)
 │   ├── Ajeyomi_Adedoyin_20260520_Adedoyin_Mobility_Data.xlsx # Full multi-sheet Excel workbook
@@ -116,7 +118,7 @@ Ajeyomi_Adedoyin_20260520/
 | **Portfolio 2** | [Query Optimisation](portfolio-2-query-optimisation/Ajeyomi_Adedoyin_20260520_README.md) | Query execution plans (`EXPLAIN ANALYZE`), B-tree & composite indexes, 4.8x to 65.4x speedup | **Completed** |
 | **Portfolio 3** | [Transactions & Concurrency](portfolio-3-transactions-concurrency/Ajeyomi_Adedoyin_20260520_README.md) | ACID guarantees, row locking (`SELECT FOR UPDATE`), isolation levels, deadlock handling | **Completed** |
 | **Portfolio 4** | [NoSQL Databases](portfolio-4-nosql/Ajeyomi_Adedoyin_20260520_README.md) | Document store generated from the SQL data, 2dsphere geospatial index, measured index speedups, TTL demo, aggregation pipelines | **Completed** |
-| **Portfolio 5** | [Distributed & Cloud Databases](portfolio-5-distributed-cloud/Ajeyomi_Adedoyin_20260520_README.md) | Corridor sharding, partition pruning, synchronous WAL streaming, Patroni HA automatic failover | **Completed** |
+| **Portfolio 5** | [Distributed & Cloud Databases](portfolio-5-distributed-cloud/Ajeyomi_Adedoyin_20260520_README.md) | Real replication and failover test, partition pruning, postgres_fdw sharding, cloud design | **Completed** |
 
 ---
 
@@ -167,10 +169,10 @@ These figures are real `EXPLAIN (ANALYZE, BUFFERS)` output from PostgreSQL 17.5.
 - **Polyglot Persistence:** PostgreSQL keeps bookings and money, and MongoDB keeps GPS pings and parcel history.
 
 ### 5.5 Portfolio 5: Distributed & Cloud Databases
-- **Corridor Sharding & Pruning:** Implemented declarative `LIST` partitioning on `origin_region`, pruning unused regional tables and slashing query buffer reads from 12 blocks down to 2 blocks.
-- **Multi-Node FDW Integration:** Prepared distributed foreign table routing using `postgres_fdw` across Lagos, Abuja, and Kano nodes.
-- **Synchronous Streaming Replication:** Designed WAL replication parameters (`synchronous_commit = remote_write`) ensuring zero data loss (RPO = 0).
-- **High Availability & Automated Failover:** Configured Patroni with etcd distributed consensus, achieving automatic leader promotion and virtual floating IP re-routing in under 10 seconds (RTO ≤ 8 s) with `pg_rewind` split-brain healing.
+- **Real replication and failover:** a primary and a standby PostgreSQL server on one computer, with synchronous replication. The primary was crashed and the standby took over in 258 ms with no committed rows lost.
+- **Partition pruning:** trips split by region. A one-region query read 64 pages instead of 704, and ran in 1.02 ms instead of 6.78 ms.
+- **Sharding across two servers:** `postgres_fdw` sends a North query to a second server, while a South query stays on the main one.
+- **Cloud design:** Patroni, etcd and servers in Lagos, Abuja and Kano are described as a plan and were not run.
 
 ---
 

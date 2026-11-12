@@ -1,0 +1,213 @@
+================================================================================
+POSTGRESQL STREAMING REPLICATION AND FAILOVER TEST
+Case study: Adedoyin Mobility and Logistics
+Run on: 2026-11-12 13:14:58
+================================================================================
+
+================================================================================
+STEP 1: CREATE THE PRIMARY SERVER (port 5440)
+================================================================================
+The files belonging to this database system will be owned by user "Admin".
+This user must also own the server process.
+
+The database cluster will be initialized with locale "English_United States.1252".
+The default text search configuration will be set to "english".
+
+Data page checksums are disabled.
+
+creating directory C:/Users/Admin/AppData/Local/Temp/aml_ha/primary ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... windows
+selecting default "max_connections" ... 100
+selecting default "shared_buffers" ... 128MB
+selecting default time zone ... Africa/Lagos
+creating configuration files ... ok
+running bootstrap script ... ok
+performing post-bootstrap initialization ... ok
+syncing data to disk ... ok
+
+Success. You can now start the database server using:
+
+    ^"C^:^\Program^ Files^\PostgreSQL^\17^\bin^\pg^_ctl^" -D ^"C^:^\Users^\Admin^\AppData^\Local^\Temp^\aml^_ha^\primary^" -l logfile start
+
+================================================================================
+STEP 2: START THE PRIMARY
+================================================================================
+waiting for server to start.... done
+server started
+
+================================================================================
+STEP 3: LOAD THE REAL DATA INTO THE PRIMARY
+================================================================================
+CREATE DATABASE
+psql:portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Schema.sql:2: NOTICE:  table "parcels" does not exist, skipping
+psql:portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Schema.sql:3: NOTICE:  table "bookings" does not exist, skipping
+psql:portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Schema.sql:4: NOTICE:  table "trips" does not exist, skipping
+psql:portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Schema.sql:5: NOTICE:  table "routes" does not exist, skipping
+psql:portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Schema.sql:6: NOTICE:  table "customers" does not exist, skipping
+psql:portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Schema.sql:7: NOTICE:  table "drivers" does not exist, skipping
+psql:portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Schema.sql:8: NOTICE:  table "vehicles" does not exist, skipping
+psql:portfolio-1-database-design/Ajeyomi_Adedoyin_20260520_Schema.sql:9: NOTICE:  table "stations" does not exist, skipping
+COPY 6
+COPY 20
+COPY 20
+COPY 500
+COPY 10
+COPY 1200
+COPY 8000
+COPY 3500
+ setval 
+--------
+      6
+(1 row)
+
+ setval 
+--------
+     20
+(1 row)
+
+ setval 
+--------
+     20
+(1 row)
+
+ setval 
+--------
+    500
+(1 row)
+
+ setval 
+--------
+     10
+(1 row)
+
+ setval 
+--------
+   1200
+(1 row)
+
+ setval 
+--------
+   8000
+(1 row)
+
+ setval 
+--------
+   3500
+(1 row)
+
+================================================================================
+STEP 4: TAKE A BASE BACKUP FOR THE STANDBY
+================================================================================
+waiting for checkpoint
+   83/35795 kB (0%), 0/1 tablespace
+31320/35795 kB (87%), 0/1 tablespace
+35806/35806 kB (100%), 0/1 tablespace
+35806/35806 kB (100%), 1/1 tablespace
+
+================================================================================
+STEP 5: START THE STANDBY (port 5441)
+================================================================================
+waiting for server to start.... done
+server started
+
+================================================================================
+STEP 6: TURN ON SYNCHRONOUS REPLICATION AND CHECK THE LINK (run on the primary)
+================================================================================
+ALTER SYSTEM SET synchronous_standby_names = 'aml_standby';
+ALTER SYSTEM
+SELECT pg_reload_conf();
+ pg_reload_conf 
+----------------
+ t
+(1 row)
+
+SELECT pg_sleep(1);
+ pg_sleep 
+----------
+ 
+(1 row)
+
+SHOW synchronous_standby_names;
+ synchronous_standby_names 
+---------------------------
+ aml_standby
+(1 row)
+
+SELECT application_name, state, sync_state, sent_lsn, write_lsn, flush_lsn, replay_lsn FROM pg_stat_replication;
+ application_name |   state   | sync_state | sent_lsn  | write_lsn | flush_lsn | replay_lsn 
+------------------+-----------+------------+-----------+-----------+-----------+------------
+ aml_standby      | streaming | sync       | 0/3000060 | 0/3000060 | 0/3000060 | 0/3000060
+(1 row)
+
+================================================================================
+STEP 7: WRITE ON THE PRIMARY, READ ON THE STANDBY
+================================================================================
+CREATE TABLE failover_test (id serial PRIMARY KEY, note text, written_at timestamptz DEFAULT now());
+CREATE TABLE
+INSERT INTO failover_test (note) SELECT 'before failover ' || g FROM generate_series(1, 1000) g;
+INSERT 0 1000
+SELECT 'primary' AS node, pg_is_in_recovery() AS in_recovery, (SELECT COUNT(*) FROM bookings) AS bookings, (SELECT COUNT(*) FROM failover_test) AS failover_rows;
+  node   | in_recovery | bookings | failover_rows 
+---------+-------------+----------+---------------
+ primary | f           |     8000 |          1000
+(1 row)
+
+SELECT 'standby' AS node, pg_is_in_recovery() AS in_recovery, (SELECT COUNT(*) FROM bookings) AS bookings, (SELECT COUNT(*) FROM failover_test) AS failover_rows;
+  node   | in_recovery | bookings | failover_rows 
+---------+-------------+----------+---------------
+ standby | t           |     8000 |          1000
+(1 row)
+
+================================================================================
+STEP 8: THE STANDBY IS READ-ONLY
+================================================================================
+INSERT INTO failover_test (note) VALUES ('write on the standby');
+psql:C:/Users/Admin/AppData/Local/Temp/aml_ha/q_3968aa142e6940f4b24bd40295df5390.sql:1: ERROR:  cannot execute INSERT in a read-only transaction
+
+================================================================================
+STEP 9: CRASH THE PRIMARY (immediate stop, no clean shutdown)
+================================================================================
+waiting for server to shut down.... done
+server stopped
+Primary stopped after 280 ms
+
+================================================================================
+STEP 10: PROMOTE THE STANDBY TO PRIMARY AND WRITE TO IT
+================================================================================
+waiting for server to promote.... done
+server promoted
+
+SELECT pg_is_in_recovery() AS still_standby;
+ still_standby 
+---------------
+ f
+(1 row)
+
+INSERT INTO failover_test (note) VALUES ('first write after failover');
+INSERT 0 1
+SELECT COUNT(*) AS rows_after_failover FROM failover_test;
+ rows_after_failover 
+---------------------
+                1001
+(1 row)
+
+Timeline since the primary crashed:
+  standby promoted and ready: 258 ms
+  first successful write on the new primary: 461 ms
+
+================================================================================
+STEP 11: THE OLD PRIMARY IS DOWN, THE NEW PRIMARY HAS ALL 1,000 ROWS PLUS THE NEW ONE
+================================================================================
+SELECT COUNT(*) FILTER (WHERE note LIKE 'before failover%') AS rows_written_before_crash, COUNT(*) FILTER (WHERE note LIKE 'first write%') AS rows_written_after_failover FROM failover_test;
+ rows_written_before_crash | rows_written_after_failover 
+---------------------------+-----------------------------
+                      1000 |                           1
+(1 row)
+
+SELECT COUNT(*) AS bookings FROM bookings;
+ bookings 
+----------
+     8000
+(1 row)
+

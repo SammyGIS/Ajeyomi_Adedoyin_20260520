@@ -1,0 +1,315 @@
+================================================================================
+PARTITION PRUNING AND SHARDING ACROSS TWO SERVERS
+Case study: Adedoyin Mobility and Logistics
+Run on: 2026-11-12 13:31:49
+================================================================================
+
+================================================================================
+STEP 1: CREATE AND START TWO SERVERS (main on 5442, north shard on 5443)
+================================================================================
+The files belonging to this database system will be owned by user "Admin".
+This user must also own the server process.
+
+The database cluster will be initialized with locale "English_United States.1252".
+The default text search configuration will be set to "english".
+
+Data page checksums are disabled.
+
+creating directory C:/Users/Admin/AppData/Local/Temp/aml_shard/main ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... windows
+selecting default "max_connections" ... 100
+selecting default "shared_buffers" ... 128MB
+selecting default time zone ... Africa/Lagos
+creating configuration files ... ok
+running bootstrap script ... ok
+performing post-bootstrap initialization ... ok
+syncing data to disk ... ok
+
+Success. You can now start the database server using:
+
+    ^"C^:^\Program^ Files^\PostgreSQL^\17^\bin^\pg^_ctl^" -D ^"C^:^\Users^\Admin^\AppData^\Local^\Temp^\aml^_shard^\main^" -l logfile start
+The files belonging to this database system will be owned by user "Admin".
+This user must also own the server process.
+
+The database cluster will be initialized with locale "English_United States.1252".
+The default text search configuration will be set to "english".
+
+Data page checksums are disabled.
+
+creating directory C:/Users/Admin/AppData/Local/Temp/aml_shard/north ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... windows
+selecting default "max_connections" ... 100
+selecting default "shared_buffers" ... 128MB
+selecting default time zone ... Africa/Lagos
+creating configuration files ... ok
+running bootstrap script ... ok
+performing post-bootstrap initialization ... ok
+syncing data to disk ... ok
+
+Success. You can now start the database server using:
+
+    ^"C^:^\Program^ Files^\PostgreSQL^\17^\bin^\pg^_ctl^" -D ^"C^:^\Users^\Admin^\AppData^\Local^\Temp^\aml^_shard^\north^" -l logfile start
+waiting for server to start.... done
+server started
+waiting for server to start.... done
+server started
+
+================================================================================
+STEP 2: LOAD THE REAL DATA AND SCALE IT UP (60,000 trips, 400,000 bookings, 175,000 parcels)
+================================================================================
+CREATE DATABASE
+
+COPY 6
+COPY 20
+COPY 20
+COPY 500
+COPY 10
+COPY 1200
+COPY 8000
+COPY 3500
+BEGIN
+INSERT 0 58800
+INSERT 0 392000
+INSERT 0 171500
+COMMIT
+ setval 
+--------
+  60000
+(1 row)
+
+ setval 
+--------
+ 400000
+(1 row)
+
+ setval 
+--------
+ 175000
+(1 row)
+
+ANALYZE
+ table_name | row_count 
+------------+-----------
+ trips      |     60000
+ parcels    |    175000
+ bookings   |    400000
+(3 rows)
+
+================================================================================
+STEP 3: BUILD A NORMAL TABLE AND A TABLE PARTITIONED BY REGION
+================================================================================
+CREATE TABLE trips_flat AS
+SELECT t.trip_id, t.route_id, t.vehicle_id, t.driver_id,
+       CASE s.state WHEN 'Lagos' THEN 'South-West' WHEN 'Oyo' THEN 'South-West'
+                    WHEN 'FCT' THEN 'North-Central' WHEN 'Kano' THEN 'North-West'
+                    ELSE 'South-East-South' END::varchar(30) AS origin_region,
+       t.departure_datetime, t.arrival_datetime, t.trip_status
+FROM trips t
+JOIN routes r ON r.route_id = t.route_id
+JOIN stations s ON s.station_id = r.origin_station_id;
+SELECT 60000
+ALTER TABLE trips_flat ADD PRIMARY KEY (trip_id);
+ALTER TABLE
+CREATE INDEX idx_flat_departure ON trips_flat (departure_datetime);
+CREATE INDEX
+CREATE TABLE trips_part (LIKE trips_flat INCLUDING DEFAULTS) PARTITION BY LIST (origin_region);
+CREATE TABLE
+CREATE TABLE trips_part_southwest PARTITION OF trips_part FOR VALUES IN ('South-West');
+CREATE TABLE
+CREATE TABLE trips_part_northcentral PARTITION OF trips_part FOR VALUES IN ('North-Central');
+CREATE TABLE
+CREATE TABLE trips_part_northwest PARTITION OF trips_part FOR VALUES IN ('North-West');
+CREATE TABLE
+CREATE TABLE trips_part_southeast PARTITION OF trips_part FOR VALUES IN ('South-East-South');
+CREATE TABLE
+INSERT INTO trips_part SELECT * FROM trips_flat;
+INSERT 0 60000
+ALTER TABLE trips_part ADD PRIMARY KEY (trip_id, origin_region);
+ALTER TABLE
+CREATE INDEX idx_part_departure ON trips_part (departure_datetime);
+CREATE INDEX
+ANALYZE trips_flat;
+ANALYZE
+ANALYZE trips_part;
+ANALYZE
+SELECT origin_region, COUNT(*) AS trips FROM trips_flat GROUP BY origin_region ORDER BY origin_region;
+  origin_region   | trips 
+------------------+-------
+ North-Central    | 11250
+ North-West       |  5600
+ South-East-South | 19450
+ South-West       | 23700
+(4 rows)
+
+SELECT tableoid::regclass AS partition, COUNT(*) AS trips FROM trips_part GROUP BY 1 ORDER BY 1;
+        partition        | trips 
+-------------------------+-------
+ trips_part_southwest    | 23700
+ trips_part_northcentral | 11250
+ trips_part_northwest    |  5600
+ trips_part_southeast    | 19450
+(4 rows)
+
+================================================================================
+STEP 4: THE SAME QUERY ON THE NORMAL TABLE (reads the whole table)
+================================================================================
+SET max_parallel_workers_per_gather = 0;
+SET
+SELECT COUNT(*) AS warm_up FROM trips_flat WHERE origin_region = 'North-West' AND trip_status = 'Completed';
+ warm_up 
+---------
+    4100
+(1 row)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT trip_id, departure_datetime, trip_status FROM trips_flat
+WHERE origin_region = 'North-West' AND trip_status = 'Completed';
+                                                  QUERY PLAN                                                  
+--------------------------------------------------------------------------------------------------------------
+ Seq Scan on trips_flat  (cost=0.00..1604.00 rows=4227 width=22) (actual time=0.007..6.639 rows=4100 loops=1)
+   Filter: (((origin_region)::text = 'North-West'::text) AND ((trip_status)::text = 'Completed'::text))
+   Rows Removed by Filter: 55900
+   Buffers: shared hit=704
+ Planning:
+   Buffers: shared hit=6
+ Planning Time: 0.100 ms
+ Execution Time: 6.779 ms
+(8 rows)
+
+================================================================================
+STEP 5: THE SAME QUERY ON THE PARTITIONED TABLE (reads one partition)
+================================================================================
+SET max_parallel_workers_per_gather = 0;
+SET
+SELECT COUNT(*) AS warm_up FROM trips_part WHERE origin_region = 'North-West' AND trip_status = 'Completed';
+ warm_up 
+---------
+    4100
+(1 row)
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT trip_id, departure_datetime, trip_status FROM trips_part
+WHERE origin_region = 'North-West' AND trip_status = 'Completed';
+                                                            QUERY PLAN                                                            
+----------------------------------------------------------------------------------------------------------------------------------
+ Seq Scan on trips_part_northwest trips_part  (cost=0.00..148.00 rows=4100 width=22) (actual time=0.008..0.896 rows=4100 loops=1)
+   Filter: (((origin_region)::text = 'North-West'::text) AND ((trip_status)::text = 'Completed'::text))
+   Rows Removed by Filter: 1500
+   Buffers: shared hit=64
+ Planning:
+   Buffers: shared hit=3
+ Planning Time: 0.087 ms
+ Execution Time: 1.020 ms
+(8 rows)
+
+================================================================================
+STEP 6: A QUERY WITHOUT THE REGION CANNOT BE PRUNED (reads every partition)
+================================================================================
+SET max_parallel_workers_per_gather = 0;
+SET
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT trip_id, departure_datetime, trip_status FROM trips_part
+WHERE trip_status = 'Cancelled';
+                                                                 QUERY PLAN                                                                  
+---------------------------------------------------------------------------------------------------------------------------------------------
+ Append  (cost=0.00..1528.75 rows=15150 width=22) (actual time=0.020..13.287 rows=15150 loops=1)
+   Buffers: shared hit=703
+   ->  Seq Scan on trips_part_northcentral trips_part_1  (cost=0.00..268.62 rows=2350 width=22) (actual time=0.019..1.710 rows=2350 loops=1)
+         Filter: ((trip_status)::text = 'Cancelled'::text)
+         Rows Removed by Filter: 8900
+         Buffers: shared hit=128
+   ->  Seq Scan on trips_part_northwest trips_part_2  (cost=0.00..134.00 rows=1500 width=22) (actual time=0.013..0.794 rows=1500 loops=1)
+         Filter: ((trip_status)::text = 'Cancelled'::text)
+         Rows Removed by Filter: 4100
+         Buffers: shared hit=64
+   ->  Seq Scan on trips_part_southeast trips_part_3  (cost=0.00..484.12 rows=5150 width=22) (actual time=0.011..5.078 rows=5150 loops=1)
+         Filter: ((trip_status)::text = 'Cancelled'::text)
+         Rows Removed by Filter: 14300
+         Buffers: shared hit=241
+   ->  Seq Scan on trips_part_southwest trips_part_4  (cost=0.00..566.25 rows=6150 width=22) (actual time=0.032..4.505 rows=6150 loops=1)
+         Filter: ((trip_status)::text = 'Cancelled'::text)
+         Rows Removed by Filter: 17550
+         Buffers: shared hit=270
+ Planning:
+   Buffers: shared hit=312
+ Planning Time: 7.430 ms
+ Execution Time: 14.013 ms
+(22 rows)
+
+================================================================================
+STEP 7: CREATE THE NORTH SHARD ON THE SECOND SERVER AND COPY THE NORTH TRIPS TO IT
+================================================================================
+CREATE DATABASE
+CREATE TABLE trips_north (
+    trip_id int, route_id int, vehicle_id int, driver_id int, origin_region varchar(30),
+    departure_datetime timestamptz, arrival_datetime timestamptz, trip_status varchar(30),
+    PRIMARY KEY (trip_id, origin_region));
+CREATE TABLE
+COPY 16850
+SELECT origin_region, COUNT(*) AS trips_on_north_server FROM trips_north GROUP BY origin_region ORDER BY origin_region;
+ origin_region | trips_on_north_server 
+---------------+-----------------------
+ North-Central |                 11250
+ North-West    |                  5600
+(2 rows)
+
+================================================================================
+STEP 8: JOIN THE TWO SERVERS WITH postgres_fdw (south trips stay local, north trips live on the other server)
+================================================================================
+CREATE EXTENSION postgres_fdw;
+CREATE EXTENSION
+CREATE SERVER north_node FOREIGN DATA WRAPPER postgres_fdw OPTIONS (host 'localhost', port '5443', dbname 'shard_north');
+CREATE SERVER
+CREATE USER MAPPING FOR postgres SERVER north_node OPTIONS (user 'postgres');
+CREATE USER MAPPING
+CREATE TABLE trips_sharded (LIKE trips_flat INCLUDING DEFAULTS) PARTITION BY LIST (origin_region);
+CREATE TABLE
+CREATE TABLE trips_sharded_south PARTITION OF trips_sharded FOR VALUES IN ('South-West', 'South-East-South');
+CREATE TABLE
+CREATE FOREIGN TABLE trips_sharded_north PARTITION OF trips_sharded FOR VALUES IN ('North-Central', 'North-West')
+    SERVER north_node OPTIONS (table_name 'trips_north');
+CREATE FOREIGN TABLE
+INSERT INTO trips_sharded_south SELECT * FROM trips_flat WHERE origin_region IN ('South-West', 'South-East-South');
+INSERT 0 43150
+ANALYZE trips_sharded_south;
+ANALYZE
+SELECT origin_region, COUNT(*) AS trips FROM trips_sharded GROUP BY origin_region ORDER BY origin_region;
+  origin_region   | trips 
+------------------+-------
+ North-Central    | 11250
+ North-West       |  5600
+ South-East-South | 19450
+ South-West       | 23700
+(4 rows)
+
+================================================================================
+STEP 9: A NORTH QUERY GOES TO THE OTHER SERVER, A SOUTH QUERY STAYS LOCAL
+================================================================================
+EXPLAIN (VERBOSE, COSTS OFF)
+SELECT trip_id, trip_status FROM trips_sharded WHERE origin_region = 'North-West' AND trip_id < 100;
+                                                           QUERY PLAN                                                           
+--------------------------------------------------------------------------------------------------------------------------------
+ Foreign Scan on public.trips_sharded_north trips_sharded
+   Output: trips_sharded.trip_id, trips_sharded.trip_status
+   Remote SQL: SELECT trip_id, trip_status FROM public.trips_north WHERE ((trip_id < 100)) AND ((origin_region = 'North-West'))
+(3 rows)
+
+EXPLAIN (VERBOSE, COSTS OFF)
+SELECT trip_id, trip_status FROM trips_sharded WHERE origin_region = 'South-West' AND trip_id < 100;
+                                                QUERY PLAN                                                
+----------------------------------------------------------------------------------------------------------
+ Seq Scan on public.trips_sharded_south trips_sharded
+   Output: trips_sharded.trip_id, trips_sharded.trip_status
+   Filter: ((trips_sharded.trip_id < 100) AND ((trips_sharded.origin_region)::text = 'South-West'::text))
+(3 rows)
+
+SELECT trip_id, origin_region, trip_status FROM trips_sharded WHERE origin_region = 'North-West' ORDER BY trip_id LIMIT 3;
+ trip_id | origin_region | trip_status 
+---------+---------------+-------------
+       2 | North-West    | Completed
+       3 | North-West    | Completed
+      25 | North-West    | Cancelled
+(3 rows)
+
